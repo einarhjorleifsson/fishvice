@@ -1,0 +1,22 @@
+Package: fishvice
+Type: Package
+Title: A collection of various functions used in stock assessment
+Version: 0.0.1.9000
+Date: 2015-03-19
+Authors@R: person("Einar", "Hjorleifsson", email = "einarhjorleifsson@gmail.com",
+  role = c("aut", "cre"))
+Description: Miscalaneous functions, ..
+Depends: R (>= 3.1.0)
+Imports:
+  ggplot2,
+  grid,
+  gridExtra,
+  plyr,
+  reshape2,
+  stringr
+License: GPL (>= 2)
+LazyData: TRUE
+URL: http://github.com/einarhjorleifsson/fishvice
+BugReports: http://github.com/einarhjorleifsson/fishvice/issues
+Suggests: knitr
+VignetteBuilder: knitr
