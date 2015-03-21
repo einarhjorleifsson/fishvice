@@ -195,7 +195,7 @@ rvk2icesxml <- function(rby,FishStock,AssessmentYear,RecruitmentAge,FAge,rba,Uni
     return(paste0(h_xml,rby_xml,rba_xml,"</Assessment>\n"))
   }
 }
-<<<<<<< HEAD
+
 
 
 #' @title ICES standard graph for Icelandic cod
@@ -284,5 +284,4 @@ ices_standard_graph_cod <- function(rby,graph_name) {
     system(paste0("convert -density 200x200 ",graph_name,".pdf ",graph_name,".png"))
   }
 }
-=======
->>>>>>> 0c6b6f60cfd30769ebb843f6017fd0d01ed78c0c
+
