@@ -2,11 +2,7 @@
 title: "Vignette Title"
 author: "Vignette Author"
 date: "`r Sys.Date()`"
-<<<<<<< HEAD
 output: html_document
-=======
-output: rmarkdown::html_vignette
->>>>>>> 0c6b6f60cfd30769ebb843f6017fd0d01ed78c0c
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
