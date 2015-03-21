@@ -14,6 +14,8 @@ Imports:
   plyr,
   reshape2,
   stringr
+Description: More about what it does (maybe more than one line)
+Depends: R (>= 3.1.0)
 License: GPL (>= 2)
 LazyData: TRUE
 URL: http://github.com/einarhjorleifsson/fishvice
