@@ -4,14 +4,21 @@
 \alias{sam_process_error}
 \title{sam process error}
 \usage{
+<<<<<<< HEAD
 sam_process_error(rbya, plus_group = TRUE, plot_it = FALSE)
+=======
+sam_process_error(rbya, plus_group = TRUE)
+>>>>>>> 34ba6ed455e58219e501675062cb2181e0cf5d7e
 }
 \arguments{
 \item{rbya}{XXX}
 
 \item{plus_group}{XXX}
+<<<<<<< HEAD
 
 \item{plot_it}{XXX}
+=======
+>>>>>>> 34ba6ed455e58219e501675062cb2181e0cf5d7e
 }
 \description{
 XXX
