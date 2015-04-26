@@ -9,9 +9,35 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
+## Western baltic cod
 ```{r, message=FALSE}
 require(fishvice)
-rbx <- read_sam(directory="WBcod_2015_short", from_web = TRUE)
 require(ggplot2)
+rbx <- read_sam(directory="WBcod_2015_short", from_web = TRUE)
 ices_standard_graph(rbx$rby)
+blob <- fishvice:::sam_process_error(rbx$rbya)
+```
+
+## North sea cod
+```{r, eval=FALSE, message=FALSE}
+rbx <- read_sam(directory="nscod2015-base6", from_web = TRUE)
+ices_standard_graph(rbx$rby)
+blob <- sam_process_error(rbx$rbya, plot_it=TRUE)
+blob$mass
+```
+
+## Mackerel
+
+Not run, fails:
+```{r, eval=FALSE, message=FALSE}
+rbx <- read_sam(directory="NEA-Mac-WGWIDE-2014", from_web = TRUE)
+ices_standard_graph(rbx$rby)
+```
+
+## Icelandic cod
+
+Not run, is in a local directory:
+```{r, eval=FALSE}
+rbx <- read_sam(directory = "~/ass/2015/01/BenchMark/ass/sam/Runs/runsmbsmh1955", subdir=FALSE)
+
 ```

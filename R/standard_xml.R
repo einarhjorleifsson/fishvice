@@ -44,7 +44,7 @@
 #' @param AssessmentYear An integer representing assessment year
 #' @param RecruitmentAge An integer representing recruitment age
 #' @param FAge A character vector containg reference fishing moralites, e.g. "F5-10"
-#' @param rba \code{data.frame} containing yield per recruit input. If missing it is
+#' @param rba \\code{data.frame} containing yield per recruit input. If missing it is
 #' ignored. If supplied required column names are:
 #' \itemize{
 #'  \item \emph{Age} - age
@@ -148,21 +148,21 @@ rvk2icesxml <- function(rby,FishStock,AssessmentYear,RecruitmentAge,FAge,rba,Uni
     if(any(match(rby_names,"SoP"),na.rm=T)) x <- paste0(x,"<SoP>",rby$SoP[i],"</SoP>\n")
     if(!missing(Custom1))
       if(any(match(rby_names,Custom1),na.rm=T)) x <- paste0(x,"<Custom1>",rby[i,Custom1],"</Custom1>\n")
-      if(!missing(Custom2))
-        if(any(match(rby_names,Custom2),na.rm=T)) x <- paste0(x,"<Custom2>",rby[i,Custom2],"</Custom2>\n")
-        if(!missing(Custom3))
-          if(any(match(rby_names,Custom3),na.rm=T)) x <- paste0(x,"<Custom3>",rby[i,Custom3],"</Custom3>\n")
-          if(!missing(Custom4))
-            if(any(match(rby_names,Custom4),na.rm=T)) x <- paste0(x,"<Custom4>",rby[i,Custom4],"</Custom4>\n")
-            if(!missing(Custom5))
-              if(any(match(rby_names,Custom5),na.rm=T)) x <- paste0(x,"<Custom5>",rby[i,Custom5],"</Custom5>\n")
+    if(!missing(Custom2))
+      if(any(match(rby_names,Custom2),na.rm=T)) x <- paste0(x,"<Custom2>",rby[i,Custom2],"</Custom2>\n")
+    if(!missing(Custom3))
+      if(any(match(rby_names,Custom3),na.rm=T)) x <- paste0(x,"<Custom3>",rby[i,Custom3],"</Custom3>\n")
+    if(!missing(Custom4))
+      if(any(match(rby_names,Custom4),na.rm=T)) x <- paste0(x,"<Custom4>",rby[i,Custom4],"</Custom4>\n")
+    if(!missing(Custom5))
+      if(any(match(rby_names,Custom5),na.rm=T)) x <- paste0(x,"<Custom5>",rby[i,Custom5],"</Custom5>\n")
 
-              x <- paste0(x,"</FishData>\n")
-              if (i == 1) {
-                rby_xml <- x
-              } else {
-                rby_xml <- paste0(rby_xml,x)
-              }
+    x <- paste0(x,"</FishData>\n")
+    if (i == 1) {
+      rby_xml <- x
+    } else {
+      rby_xml <- paste0(rby_xml,x)
+    }
   }
 
   ## Yield per recruit input
@@ -193,185 +193,5 @@ rvk2icesxml <- function(rby,FishStock,AssessmentYear,RecruitmentAge,FAge,rba,Uni
       }
     }
     return(paste0(h_xml,rby_xml,rba_xml,"</Assessment>\n"))
-  }
-}
-
-
-
-#' @title ICES standard graph for Icelandic cod
-#'
-#' @description The intent is to make this graph generic, now only reasonable
-#' for iCod.
-#'
-#' @param rby data.frame containing ...
-#' @param graph_name Name of the graph to be created
-#'
-ices_standard_graph_cod <- function(rby,graph_name) {
-
-  my_margins <- rep(0.10,4)
-
-  # dummy
-  year <- oY <- n3 <- value <- variable <- 0
-
-  yield <-
-    ggplot2::ggplot(rby,ggplot2::aes(year,oY)) +
-    ggplot2::theme_bw() +
-    ggplot2::geom_bar(stat="identity", fill="azure4", col="white") +
-    ggplot2::labs(x="",y="kilotonnes",title="Landings") +
-    ggplot2::scale_x_continuous(breaks=seq(1960,2010,by=10)) +
-    ggplot2::scale_y_continuous(breaks=seq(0,500,by=100)) +
-    ggplot2::expand_limits(y=0) +
-    ggplot2::theme(panel.grid.minor = ggplot2::element_line(colour = "transparent"),
-          plot.margin=grid::unit(my_margins,"cm"))
-
-  rec <-
-    ggplot2::ggplot(rby,ggplot2::aes(year,n3)) +
-    ggplot2::theme_bw() +
-    ggplot2::geom_bar(stat="identity", fill="azure4",col="white") +
-    ggplot2::labs(x="",y="millions",title="Recruitment (age 3)") +
-    ggplot2::scale_x_continuous(breaks=seq(1960,2010,by=10)) +
-    ggplot2::scale_y_continuous(breaks=seq(0,400,by=50)) +
-    ggplot2::expand_limits(y=0) +
-    ggplot2::theme(panel.grid.minor = ggplot2::element_line(colour = "transparent"),
-          plot.margin=grid::unit(my_margins,"cm"))
-
-  bios <- rby[,c("year","ssb","bio")]
-  names(bios) <- c("year","Spawning stock","Reference stock")
-  bios <- reshape2::melt(bios,id.vars = "year")
-  bio <-
-    ggplot2::ggplot(bios,ggplot2::aes(year,value,linetype=variable)) +
-    ggplot2::theme_bw() +
-    ggplot2::geom_line() +
-    ggplot2::scale_y_continuous(breaks=seq(0,2250,by=250),lim=c(0,max(rby$bio)*1.05),expand=c(0,0)) +
-    ggplot2::geom_hline(yintercept=125,linetype=3) +
-    ggplot2::scale_x_continuous(breaks=seq(1960,2010,by=10)) +
-    ggplot2::scale_color_brewer(palette="Set1") +
-    ggplot2::labs(x="",y="kilotonnes",title="Spawning stock and reference biomass",linetype="") +
-    ggplot2::theme(legend.position=c(0.8,0.87),
-          legend.key=ggplot2::element_rect(colour="white",fill="white"),
-          legend.text=ggplot2::element_text(size=ggplot2::rel(0.7)),
-          legend.title=ggplot2::element_text(size=1),
-          plot.margin=grid::unit(my_margins,"cm"),
-          panel.grid.minor = ggplot2::element_line(colour = "transparent")) +
-    ggplot2::annotate("text",x=1955,y=175, label = "Blim", size=3)
-
-  morts <- rby[,c("year","fbar","hr")]
-  names(morts) <- c("year","Fishing mortality","Harvest rate")
-  morts <- reshape2::melt(morts,id.vars = "year")
-  mort <-
-    ggplot2::ggplot(morts,ggplot2::aes(year,value,linetype=variable)) +
-    ggplot2::theme_bw() +
-    ggplot2::geom_line() +
-    ggplot2::geom_hline(yintercept=0.20,linetype=3) +
-    ggplot2::scale_x_continuous(breaks=seq(1960,2010,by=10)) +
-    ggplot2::scale_y_continuous(breaks=seq(0,0.9,by=0.1),lim=c(0,max(rby$f)*1.07),expand=c(0,0)) +
-    ggplot2::labs(x="",y=" ",title="Fishing mortality and harvest rate",linetype="") +
-    ggplot2::theme(legend.position=c(0.87,0.87),
-          legend.key=ggplot2::element_rect(colour="white",fill="white"),
-          legend.margin = grid::unit(0,"cm"),
-          legend.text=ggplot2::element_text(size=ggplot2::rel(0.7)),
-          legend.title=ggplot2::element_text(size=1),
-          plot.margin=grid::unit(my_margins,"cm"),
-          panel.grid.minor = ggplot2::element_line(colour = "transparent")) +
-    ggplot2::annotate("text",x=1965,y=0.22, label = "advisory harvest rate", size=3)
-
-  my_height <- 8
-  goldenRatio <- (1+sqrt(5))/2
-  if(!missing(graph_name)) pdf(paste0(graph_name,".pdf"),height=my_height,width=goldenRatio*my_height)
-  gridExtra::grid.arrange(yield, rec, mort, bio, ncol=2)
-  if(!missing(graph_name)) {
-    dev.off()
-    system(paste0("convert -density 200x200 ",graph_name,".pdf ",graph_name,".png"))
-  }
-}
-
-
-#' @title ICES standard graph
-#'
-#' @description XXX
-#'
-#' @export
-#'
-#' @param rby data.frame containing ...
-#' @param graph_name Name of the graph to be created
-#'
-ices_standard_graph <- function(rby,graph_name) {
-
-  my_margins <- rep(0.10,4)
-
-  # dummy
-  year <- oY <- n3 <- value <- variable <- 0
-
-  yield <-
-    ggplot2::ggplot(rby,ggplot2::aes(year,oY)) +
-    ggplot2::theme_bw() +
-    ggplot2::geom_bar(stat="identity", fill="azure4", col="white") +
-    ggplot2::labs(x="",y="kilotonnes",title="Landings") +
-    #ggplot2::scale_x_continuous(breaks=seq(1960,2010,by=10)) +
-    #ggplot2::scale_y_continuous(breaks=seq(0,500,by=100)) +
-    ggplot2::expand_limits(y=0) +
-    ggplot2::theme(panel.grid.minor = ggplot2::element_line(colour = "transparent"),
-                   plot.margin=grid::unit(my_margins,"cm"))
-
-  rec <-
-    ggplot2::ggplot(rby,ggplot2::aes(year,r)) +
-    ggplot2::theme_bw() +
-    ggplot2::geom_bar(stat="identity", fill="azure4",col="white") +
-    ggplot2::labs(x="",y="millions",title="Recruitment") +
-    #ggplot2::scale_x_continuous(breaks=seq(1960,2010,by=10)) +
-    #ggplot2::scale_y_continuous(breaks=seq(0,400,by=50)) +
-    ggplot2::expand_limits(y=0) +
-    ggplot2::theme(panel.grid.minor = ggplot2::element_line(colour = "transparent"),
-                   plot.margin=grid::unit(my_margins,"cm"))
-
-  bios <- rby[,c("year","ssb","bio")]
-  names(bios) <- c("year","Spawning stock","Reference stock")
-  bios <- reshape2::melt(bios,id.vars = "year")
-  bio <-
-    ggplot2::ggplot(bios,ggplot2::aes(year,value,linetype=variable)) +
-    ggplot2::theme_bw() +
-    ggplot2::geom_line() +
-    #ggplot2::scale_y_continuous(breaks=seq(0,2250,by=250),lim=c(0,max(rby$bio)*1.05),expand=c(0,0)) +
-    #ggplot2::geom_hline(yintercept=125,linetype=3) +
-    #ggplot2::scale_x_continuous(breaks=seq(1960,2010,by=10)) +
-    ggplot2::scale_color_brewer(palette="Set1") +
-    ggplot2::labs(x="",y="kilotonnes",title="Spawning stock and reference biomass",linetype="") +
-    ggplot2::theme(legend.position=c(0.8,0.87),
-                   legend.key=ggplot2::element_rect(colour="white",fill="white"),
-                   legend.text=ggplot2::element_text(size=ggplot2::rel(0.7)),
-                   legend.title=ggplot2::element_text(size=1),
-                   plot.margin=grid::unit(my_margins,"cm"),
-                   panel.grid.minor = ggplot2::element_line(colour = "transparent")) +
-    ggplot2::expand_limits(y=0)
-    #ggplot2::annotate("text",x=1955,y=175, label = "Blim", size=3)
-
-  morts <- rby[,c("year","fbar")]
-  names(morts) <- c("year","Fishing mortality")
-  morts <- reshape2::melt(morts,id.vars = "year")
-  mort <-
-    ggplot2::ggplot(morts,ggplot2::aes(year,value,linetype=variable)) +
-    ggplot2::theme_bw() +
-    ggplot2::geom_line() +
-    #ggplot2::geom_hline(yintercept=0.20,linetype=3) +
-    #ggplot2::scale_x_continuous(breaks=seq(1960,2010,by=10)) +
-    #ggplot2::scale_y_continuous(breaks=seq(0,0.9,by=0.1),lim=c(0,max(rby$f)*1.07),expand=c(0,0)) +
-    ggplot2::labs(x="",y=" ",title="Fishing mortality and harvest rate",linetype="") +
-    ggplot2::theme(legend.position=c(0.87,0.87),
-                   legend.key=ggplot2::element_rect(colour="white",fill="white"),
-                   legend.margin = grid::unit(0,"cm"),
-                   legend.text=ggplot2::element_text(size=ggplot2::rel(0.7)),
-                   legend.title=ggplot2::element_text(size=1),
-                   plot.margin=grid::unit(my_margins,"cm"),
-                   panel.grid.minor = ggplot2::element_line(colour = "transparent")) +
-    ggplot2::expand_limits(y=0)
-    #ggplot2::annotate("text",x=1965,y=0.22, label = "advisory harvest rate", size=3)
-
-  my_height <- 8
-  goldenRatio <- (1+sqrt(5))/2
-  if(!missing(graph_name)) pdf(paste0(graph_name,".pdf"),height=my_height,width=goldenRatio*my_height)
-  gridExtra::grid.arrange(yield, rec, mort, bio, ncol=2)
-  if(!missing(graph_name)) {
-    dev.off()
-    system(paste0("convert -density 200x200 ",graph_name,".pdf ",graph_name,".png"))
   }
 }
