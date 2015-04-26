@@ -40,8 +40,8 @@ sam_process_error <- function(rbya, plus_group=TRUE, plot_it=FALSE) {
 
   # ----------------------------------------------------------------------------
   # process errror expressed as biomass
-  x <- plyr::ddply(d,c("year"),plyr::summarise,b=sum(n.d * cW,na.rm=TRUE)/1e3)
-  x <- plyr::ddply(d,c("year"),plyr::summarise,b=sum(n.d * cW,na.rm=TRUE)/1e3)
+  x <- plyr::ddply(d,c("year"),plyr::summarise,b=sum(n.d * cW,na.rm=TRUE))
+  x <- plyr::ddply(d,c("year"),plyr::summarise,b=sum(n.d * cW,na.rm=TRUE))
 
   if(plot_it) {
     mort <- ggplot2::ggplot(d,ggplot2::aes(year,z.d)) +
@@ -50,16 +50,16 @@ sam_process_error <- function(rbya, plus_group=TRUE, plot_it=FALSE) {
       ggplot2::stat_smooth(span=0.1) +
       ggplot2::labs(x="",y="Process error expressed as deviations in mortality")
 
-    abun <- ggplot2::ggplot(d,ggplot2::aes(year,n.d/1e3)) +
+    abun <- ggplot2::ggplot(d,ggplot2::aes(year,n.d)) +
       ggplot2::theme_bw() +
       ggplot2::geom_bar(stat="identity") +
       ggplot2::facet_wrap(~ age, scale="free_y") +
-      ggplot2::labs(x="", y="Number of fish [thousands]", title="Process error expressed as deviations in number of fish")
+      ggplot2::labs(x="", y="Number of fish", title="Process error expressed as deviations in number of fish")
 
     mass <- ggplot2::ggplot(x[x$year <= 2013,],ggplot2::aes(year,b)) +
       ggplot2::theme_bw() +
       ggplot2::geom_bar(stat="identity") +
-      ggplot2::labs(x="",y="Mass [thousand tonnes]",title="Process error expressed as deviation in mass")
+      ggplot2::labs(x="",y="Mass",title="Process error expressed as deviation in mass")
 
     return(list(rbya=d,rby=x,mort=mort,abun=abun,mass=mass))
   }

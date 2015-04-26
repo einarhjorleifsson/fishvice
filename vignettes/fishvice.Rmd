@@ -15,7 +15,7 @@ require(fishvice)
 require(ggplot2)
 rbx <- read_sam(directory="WBcod_2015_short", from_web = TRUE)
 ices_standard_graph(rbx$rby)
-blob <- fishvice:::sam_process_error(rbx$rbya, plot_it=TRUE)
+blob <- sam_process_error(rbx$rbya, plot_it=TRUE)
 blob$mass
 ```
 

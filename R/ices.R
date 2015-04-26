@@ -1,4 +1,5 @@
-#  Problem The ICSE System does not accept mat in rba
+#  Problem The ICES System does not accept mat in rba
+
 #' @title rvk2icesxml
 #'
 #' @description Converts data.frame to ices xml format for standard graphs. The
@@ -206,7 +207,7 @@ rvk2icesxml <- function(rby,FishStock,AssessmentYear,RecruitmentAge,FAge,rba,Uni
 #' @param rby data.frame containing ...
 #' @param graph_name Name of the graph to be created
 #'
-ices_standard_graph_cod <- function(rby,graph_name) {
+ices_standard_graph_cod <- function(rby, graph_name) {
 
   my_margins <- rep(0.10,4)
 
@@ -374,4 +375,30 @@ ices_standard_graph <- function(rby,graph_name) {
     dev.off()
     system(paste0("convert -density 200x200 ",graph_name,".pdf ",graph_name,".png"))
   }
+}
+
+
+#' @title Get a copy of ICES sharepoint directory
+#'
+#' @description Makes a full copy of a sharepoint directory onto your computer.
+#' In theory you can request a full mirror of the whole sharepoint :-)
+#' So use at your own discretion!
+#'
+#' Still only function for some directories
+#'
+#' @param user_name Only the name after the ices-backslash
+#' @param password Your password
+#' @param directory The path to the directory you want. I
+#'
+get_ices_directory <- function(user_name,password,directory)
+  {
+
+  cmd <- paste0("wget -r -l4 --no-parent --user='ices\\",user_name)
+  cmd <- paste0(cmd,"' --password=")
+  cmd <- paste0(cmd,password)
+  cmd <- paste0(cmd," 'https://community.ices.dk/")
+  cmd <- paste0(cmd,directory,"'")
+
+  system(cmd)
+
 }
