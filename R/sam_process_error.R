@@ -48,13 +48,13 @@ sam_process_error <- function(rbya, plus_group=TRUE, plot_it=FALSE) {
       ggplot2::theme_bw() +
       ggplot2::geom_text(ggplot2::aes(label=age)) +
       ggplot2::stat_smooth(span=0.1) +
-      ggplot2::labs(x="",y="Process error expressed as deviations in mortality")
+      ggplot2::labs(x="",y="",title="Process error expressed as deviations in mortality")
 
     abun <- ggplot2::ggplot(d,ggplot2::aes(year,n.d)) +
       ggplot2::theme_bw() +
       ggplot2::geom_bar(stat="identity") +
       ggplot2::facet_wrap(~ age, scale="free_y") +
-      ggplot2::labs(x="", y="Number of fish", title="Process error expressed as deviations in number of fish")
+      ggplot2::labs(x="", y="",title="Process error expressed as deviations in number of fish")
 
     mass <- ggplot2::ggplot(x[x$year <= 2013,],ggplot2::aes(year,b)) +
       ggplot2::theme_bw() +
