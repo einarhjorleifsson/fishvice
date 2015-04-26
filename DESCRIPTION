@@ -1,8 +1,8 @@
 Package: fishvice
 Type: Package
 Title: A collection of various functions used in stock assessment
-Version: 0.0.1.9000
-Date: 2015-03-19
+Version: 0.0.2.9000
+Date: 2015-04-26
 Authors@R: person("Einar", "Hjorleifsson", email = "einarhjorleifsson@gmail.com",
   role = c("aut", "cre"))
 Description: Miscalaneous functions, ..
@@ -10,6 +10,7 @@ Imports:
   ggplot2,
   grid,
   gridExtra,
+  FLCore,
   plyr,
   reshape2,
   stringr
