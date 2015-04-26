@@ -1,11 +1,8 @@
-
 #' @title read_lowestoft_file
 #'
 #' @description The code is inpired by the
 #'  \href{https://github.com/flr/FLCore/blob/master/R/io.VPAsuite.R}{FLCore::readVPAFile} function.
 #' The difference is that it is not dependent on the FLCore, including the S4-methods.
-#'
-#' @export
 #'
 #' @param file name of file, normally the index file name
 #' @param format output format, "matrix","wide","long"

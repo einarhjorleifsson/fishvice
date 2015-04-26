@@ -300,7 +300,7 @@ ices_standard_graph <- function(rby,graph_name) {
   my_margins <- rep(0.10,4)
 
   # dummy
-  year <- oY <- n3 <- value <- variable <- 0
+  year <- oY <- r <- value <- variable <- 0
 
   yield <-
     ggplot2::ggplot(rby,ggplot2::aes(year,oY)) +
@@ -342,7 +342,7 @@ ices_standard_graph <- function(rby,graph_name) {
                    legend.title=ggplot2::element_text(size=1),
                    plot.margin=grid::unit(my_margins,"cm"),
                    panel.grid.minor = ggplot2::element_line(colour = "transparent")) +
-    expand_limits(y=0)
+    ggplot2::expand_limits(y=0)
     #ggplot2::annotate("text",x=1955,y=175, label = "Blim", size=3)
 
   morts <- rby[,c("year","fbar")]
@@ -363,7 +363,7 @@ ices_standard_graph <- function(rby,graph_name) {
                    legend.title=ggplot2::element_text(size=1),
                    plot.margin=grid::unit(my_margins,"cm"),
                    panel.grid.minor = ggplot2::element_line(colour = "transparent")) +
-    expand_limits(y=0)
+    ggplot2::expand_limits(y=0)
     #ggplot2::annotate("text",x=1965,y=0.22, label = "advisory harvest rate", size=3)
 
   my_height <- 8

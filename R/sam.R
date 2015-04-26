@@ -44,6 +44,9 @@ sam_get_directory <- function(assessment, user="user3") {
 
 read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3") {
 
+  # dummies
+  cW <- oC <- 0
+
   if(from_web) {
     URL <- paste("https://www.stockassessment.org/datadisk/stockassessment/userdirs",user,directory,sep="/")
     sam.dat       <- get_file(paste(URL,"run",sep="/"),"sam.dat")
@@ -240,11 +243,10 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   # Calculate oY
   oY <- plyr::ddply(rbya, c("year"), plyr::summarise,
                     oY = sum(cW * oC, na.rm=TRUE))
-  rby <- plyr::join(rby,oY)
-
-
+  rby <- plyr::join(rby, oY, by=c("year"))
 
   return(list(rbya=rbya,rby=rby))
+
 }
 
 
