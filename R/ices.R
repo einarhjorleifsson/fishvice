@@ -1,6 +1,6 @@
 #  Problem The ICES System does not accept mat in rba
 
-#' @title rvk2icesxml
+#' @title rvk_to_icesxml
 #'
 #' @description Converts data.frame to ices xml format for standard graphs. The
 #' function is a brute force coding and does not have any error checking on the
@@ -82,7 +82,7 @@
 #' @param Custom5 XXX
 #' @param VersionStock XXX
 #' @param NameSystemProducedFile XXX
-rvk2icesxml <- function(rby,FishStock,AssessmentYear,RecruitmentAge,FAge,rba,UnitsWeigths="tonnes",
+rvk_to_icesxml <- function(rby,FishStock,AssessmentYear,RecruitmentAge,FAge,rba,UnitsWeigths="tonnes",
                         UnitsRecruits="millions",TypeLandings="official",
                         Flim,Fpa,Blim,Bpa,FMSY,MSYBtrigger,
                         Fmanagement,Bmanagement,RecruitmentLength,
@@ -130,23 +130,26 @@ rvk2icesxml <- function(rby,FishStock,AssessmentYear,RecruitmentAge,FAge,rba,Uni
     if(any(match(rby_names,"SSB"),na.rm=T)) x <- paste0(x,"<SSB>",rby$SSB[i],"</SSB>\n")
     if(any(match(rby_names,"High_SSB"),na.rm=T)) x <- paste0(x,"<High_SSB>",rby$High_SSB[i],"</High_SSB>\n")
 
-    if(any(match(rby_names,"Catches"),na.rm=T)) x <- paste0(x,"<Catches>",rby$Catches[i],"</Catches>\n")
-    if(any(match(rby_names,"Landings"),na.rm=T)) x <- paste0(x,"<Landings>",rby$Landings[i],"</Landings>\n")
-    if(any(match(rby_names,"Discards"),na.rm=T)) x <- paste0(x,"<Discards>",rby$Discards[i],"</Discards>\n")
+    if(i < nrow(rby)) {
+      if(any(match(rby_names,"Catches"),na.rm=T)) x <- paste0(x,"<Catches>",rby$Catches[i],"</Catches>\n")
+      if(any(match(rby_names,"Landings"),na.rm=T)) x <- paste0(x,"<Landings>",rby$Landings[i],"</Landings>\n")
+      if(any(match(rby_names,"Discards"),na.rm=T)) x <- paste0(x,"<Discards>",rby$Discards[i],"</Discards>\n")
 
-    if(any(match(rby_names,"IBC"),na.rm=T)) x <- paste0(x,"<IBC>",rby$IBC[i],"</IBC>\n")
-    if(any(match(rby_names,"Unallocated_Removals"),na.rm=T)) x <- paste0(x,"<Unallocated_Removals>",rby$Unallocated_Removals[i],"</Unallocated_Removals>\n")
-    if(any(match(rby_names,"YieldSSB"),na.rm=T)) x <- paste0(x,"<YieldSSB>",rby$YieldSSB[i],"</YieldSSB>\n")
+      if(any(match(rby_names,"IBC"),na.rm=T)) x <- paste0(x,"<IBC>",rby$IBC[i],"</IBC>\n")
+      if(any(match(rby_names,"Unallocated_Removals"),na.rm=T)) x <- paste0(x,"<Unallocated_Removals>",rby$Unallocated_Removals[i],"</Unallocated_Removals>\n")
+      if(any(match(rby_names,"YieldSSB"),na.rm=T)) x <- paste0(x,"<YieldSSB>",rby$YieldSSB[i],"</YieldSSB>\n")
 
-    if(any(match(rby_names,"Low_F"),na.rm=T)) x <- paste0(x,"<Low_F>",rby$Low_F[i],"</Low_F>\n")
-    if(any(match(rby_names,"F"),na.rm=T)) x <- paste0(x,"<F>",rby$F[i],"</F>\n")
-    if(any(match(rby_names,"High_F"),na.rm=T)) x <- paste0(x,"<High_F>",rby$High_F[i],"</High_F>\n")
+      if(any(match(rby_names,"Low_F"),na.rm=T)) x <- paste0(x,"<Low_F>",rby$Low_F[i],"</Low_F>\n")
+      if(any(match(rby_names,"F"),na.rm=T)) x <- paste0(x,"<F>",rby$F[i],"</F>\n")
+      if(any(match(rby_names,"High_F"),na.rm=T)) x <- paste0(x,"<High_F>",rby$High_F[i],"</High_F>\n")
 
-    if(any(match(rby_names,"F_Landings"),na.rm=T)) x <- paste0(x,"<F_Landings>",rby$F_Landings[i],"</F_Landings>\n")
-    if(any(match(rby_names,"F_Discards"),na.rm=T)) x <- paste0(x,"<F_Discards>",rby$F_Discards[i],"</F_Discards>\n")
-    if(any(match(rby_names,"F_IBC"),na.rm=T)) x <- paste0(x,"<F_IBC>",rby$F_IBC[i],"</F_IBC>\n")
-    if(any(match(rby_names,"F_Unallocated"),na.rm=T)) x <- paste0(x,"<F_Unallocated>",rby$F_Unallocated[i],"</F_Unallocated>\n")
-    if(any(match(rby_names,"SoP"),na.rm=T)) x <- paste0(x,"<SoP>",rby$SoP[i],"</SoP>\n")
+      if(any(match(rby_names,"F_Landings"),na.rm=T)) x <- paste0(x,"<F_Landings>",rby$F_Landings[i],"</F_Landings>\n")
+      if(any(match(rby_names,"F_Discards"),na.rm=T)) x <- paste0(x,"<F_Discards>",rby$F_Discards[i],"</F_Discards>\n")
+      if(any(match(rby_names,"F_IBC"),na.rm=T)) x <- paste0(x,"<F_IBC>",rby$F_IBC[i],"</F_IBC>\n")
+      if(any(match(rby_names,"F_Unallocated"),na.rm=T)) x <- paste0(x,"<F_Unallocated>",rby$F_Unallocated[i],"</F_Unallocated>\n")
+      if(any(match(rby_names,"SoP"),na.rm=T)) x <- paste0(x,"<SoP>",rby$SoP[i],"</SoP>\n")
+    }
+
     if(!missing(Custom1))
       if(any(match(rby_names,Custom1),na.rm=T)) x <- paste0(x,"<Custom1>",rby[i,Custom1],"</Custom1>\n")
       if(!missing(Custom2))
