@@ -2,6 +2,7 @@
 
 export(FLStock_to_rbya)
 export(ices_standard_graph)
+export(read_hst)
 export(read_sam)
 export(rvk2icesxml)
 export(sam_get_directory)
