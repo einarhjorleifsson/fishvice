@@ -7,13 +7,15 @@ Authors@R: person("Einar", "Hjorleifsson", email = "einarhjorleifsson@gmail.com"
   role = c("aut", "cre"))
 Description: Miscalaneous functions, ..
 Imports:
+  FLCore,
   ggplot2,
   grid,
   gridExtra,
-  FLCore,
+  httr,
   plyr,
   reshape2,
-  stringr
+  stringr,
+  XML
 Description: More about what it does (maybe more than one line)
 Depends: R (>= 3.1.0)
 License: GPL (>= 2)
