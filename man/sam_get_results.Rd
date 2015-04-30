@@ -14,5 +14,7 @@ www.stockassessment.org}
 }
 \description{
 Gets the input files and sam output files from the www.stockassessment.org
+
+Some important pieces of the code are from Anders Nielsen
 }
 

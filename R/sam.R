@@ -29,11 +29,13 @@ sam_get_directory <- function(assessment, user="user3") {
 
 
 # ------------------------------------------------------------------------------
-# read_sam is the next generation of the function above
+# read_sam is the next generation of the function below
 
 #' @title read_sam
 #'
 #' @description Gets the input files and sam output files from the www.stockassessment.org
+#'
+#' Some important pieces of the code are from Anders Nielsen
 #'
 #' @export
 #'
@@ -102,17 +104,24 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   sublin <- lin[(max(idx2)+1):length(lin)]
   x <- as.data.frame(matrix(as.numeric(unlist(strsplit(sublin," "))),ncol = keys$nAges, byrow = TRUE))
   names(x) <- c(keys$minAge:keys$maxAge)
+
+  n1 <- length(keys$years)
+  if(floor(nrow(x)/n1) == nrow(x)/n1) {
+    n2 <- n1
+  } else {
+    n2 <- n1-1
+  }
+
   x$year <- c(keys$years,                        # proportion mature
               keys$years,                        # stock weights
-              keys$years[-length(keys$years)],   # catch weights
+              keys$years[1:n2],                  # catch weights
               keys$years,                        # natural mortality
-              keys$years[-length(keys$years)],   # landing fraction
-              keys$years[-length(keys$years)],   # discard weights
-              keys$years[-length(keys$years)],   # landing weights
+              keys$years[1:n2],                  # landing fraction
+              keys$years[1:n2],                  # discard weights
+              keys$years[1:n2],                  # landing weights
               keys$years,                        # pF
               keys$years)                        # pM
-  n1 <- length(keys$years)
-  n2 <- n1 - 1
+
   x$variables <- c(rep("mat",n1),
                    rep("sW",n1),
                    rep("cW",n2),
@@ -155,7 +164,7 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   rbya <- plyr::join(rbya,x,by=c("year","age"))
 
   # ----------------------------------------------------------------------------
-  #
+  # This code is from Anders Nielsen
   lin <- readLines(sam.cor)
   fit <- list()
   fit$npar <- length(lin)-2
@@ -257,6 +266,8 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
 #'
 #' @description Gets the input files and sam output files from the www.stockassessment.org
 #'
+#' Some important pieces of the code are from Anders Nielsen
+#'
 #' @export
 #'
 #' @param assessment The directory name of the assessment as specified on
@@ -264,6 +275,8 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
 #' @param user User name, guest users can use "user3" (default)
 
 sam_get_results <- function(assessment="WBcod_2015_short",user="user3") {
+
+  message("This function will be discontinued")
 
   URL <- paste("https://www.stockassessment.org/datadisk/stockassessment/userdirs",user,assessment,sep="/")
 
