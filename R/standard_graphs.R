@@ -82,6 +82,7 @@
 #' @param Custom5 XXX
 #' @param VersionStock XXX
 #' @param NameSystemProducedFile XXX
+#'
 standard_graph_xml <- function(rby,FishStock,AssessmentYear,RecruitmentAge,FAge,rba,UnitsWeigths="tonnes",
                                UnitsRecruits="millions",TypeLandings="official",
                                Flim,Fpa,Blim,Bpa,FMSY,MSYBtrigger,
