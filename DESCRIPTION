@@ -1,12 +1,14 @@
 Package: fishvice
 Type: Package
-Title: A collection of various functions used in stock assessment
+Title: A collection of various personal functions used in stock assessment
 Version: 0.0.3.9000
 Date: 2015-05-30
 Authors@R: person("Einar", "Hjorleifsson", email = "einarhjorleifsson@gmail.com",
   role = c("aut", "cre"))
 Description: Miscalaneous functions, ..
-Depends:  dplyr
+Depends:
+  R (>= 3.1.0),
+  dplyr
 Imports:
   dplyrOracle,
   FLCore,
@@ -18,8 +20,6 @@ Imports:
   reshape2,
   stringr,
   XML
-Description: More about what it does (maybe more than one line)
-Depends: R (>= 3.1.0)
 License: GPL (>= 2)
 LazyData: TRUE
 URL: http://github.com/einarhjorleifsson/fishvice
