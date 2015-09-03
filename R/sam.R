@@ -96,14 +96,31 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   ibya <- reshape2::dcast(ibya, year + age ~ fleet, value.var = "obs")
   colnames(ibya) <- c("year","age","oC",paste0("oU",1:(ncol(ibya)-3)))
 
-  keys$minAge <- min(ibya$age)
-  keys$maxAge <- max(ibya$age)
-  keys$nAges <- length(unique(ibya$age))
+  # 2015-09-03 amendments
+  # In the case of mackerel - in the input files there is age 99
+  # which stands for non-age index (egg survey)
+
+  ages <- sort(unique(ibya$age))
+  ages <- ages[ages != 99]
+
+  keys$minAge <- min(ages)
+  keys$maxAge <- max(ages)
+  keys$nAges <- length(ages)
   keys$ages <- c(keys$minAge:keys$maxAge)
 
-  sublin <- lin[(max(idx2)+1):length(lin)]
-  x <- as.data.frame(matrix(as.numeric(unlist(strsplit(sublin," "))),ncol = keys$nAges, byrow = TRUE))
-  names(x) <- c(keys$minAge:keys$maxAge)
+  # 2015-09-03 amendments
+  # In the case of mackerel - length(lin) does not work on this part
+  x <- lin[(max(idx2)+1):length(lin)] %>%
+    stringr::str_trim() %>%
+    stringr::str_replace_all(pattern = '\t',replacement = ' ') %>%
+    stringr::str_split(pattern=' ') %>%
+    # there should be a more clever way than using unlist and then matrix here
+    unlist() %>%
+    as.numeric() %>%
+    matrix(ncol = keys$nAges, byrow = TRUE) %>%
+    as.data.frame()
+  colnames(x) <- c(keys$minAge:keys$maxAge)
+
 
   n1 <- length(keys$years)
   if(floor(nrow(x)/n1) == nrow(x)/n1) {
@@ -113,46 +130,47 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   }
 
   x$year <- c(keys$years,                        # proportion mature
-              keys$years,                        # stock weights
-              keys$years[1:n2],                  # catch weights
-              keys$years,                        # natural mortality
-              keys$years[1:n2],                  # landing fraction
-              keys$years[1:n2],                  # discard weights
-              keys$years[1:n2],                  # landing weights
-              keys$years,                        # pF
-              keys$years)                        # pM
+                 keys$years,                        # stock weights
+                 keys$years[1:n2],                  # catch weights
+                 keys$years,                        # natural mortality
+                 keys$years[1:n2],                  # landing fraction
+                 keys$years[1:n2],                  # discard weights
+                 keys$years[1:n2],                  # landing weights
+                 keys$years,                        # pF
+                 keys$years)                        # pM
 
   x$variables <- c(rep("mat",n1),
-                   rep("sW",n1),
-                   rep("cW",n2),
-                   rep("m", n1),
-                   rep("fL",n2),
-                   rep("dW",n2),
-                   rep("lW",n2),
-                   rep("pF",n1),
-                   rep("pM",n1))
-  x <- reshape2::melt(x,c("year","variables"),variable.name="age")
-  x <- reshape2::dcast(x, year + age ~ variables, value.var = "value")
-  x$age <- as.integer(as.character(x$age))
-  ibya <- plyr::join(x,ibya,by=c("year","age"))
+                      rep("sW",n1),
+                      rep("cW",n2),
+                      rep("m", n1),
+                      rep("fL",n2),
+                      rep("dW",n2),
+                      rep("lW",n2),
+                      rep("pF",n1),
+                      rep("pM",n1))
+  ibya <- x %>%
+    reshape2::melt(c("year","variables"),variable.name="age") %>%
+    reshape2::dcast(year + age ~ variables, value.var = "value") %>%
+    mutate(age = as.integer(as.character(age))) %>%
+    left_join(ibya,by=c("year","age"))
 
   # ----------------------------------------------------------------------------
   # Dimensions
-  lin <- readLines(model.cfg, warn=FALSE)
-  lin <- lin[!lin==""]
-  lin <- stringr::str_trim(lin)
+  x <- readLines(model.cfg, warn=FALSE)
+  x <- x[!x==""]
+  x <- stringr::str_trim(x)
   # lines without a starting #
-  i <- !stringr::str_locate(lin,"#")[,1] %in% 1
-  lin <- lin[i]
+  i <- !stringr::str_locate(x,"#")[,1] %in% 1
+  x <- x[i]
 
-  keys$plusGroup <- lin[3] == 0
-  keys$states <- as.integer(stringr::str_split(lin[4],"\t")[[1]][1:keys$nAges])
+  keys$plusGroup <- x[3] == 0
+  keys$states <- as.integer(stringr::str_split(x[4],"\t")[[1]][1:keys$nAges])
 
 
 
   # ----------------------------------------------------------------------------
   # residuals
-  res <- read.table(sam.res,header=FALSE)
+  res <- read.table(sam.res, header=FALSE)
   colnames(res) <- c("year","fleet","age","obs","pre","res")
   res$pre <- exp(res$pre)
 

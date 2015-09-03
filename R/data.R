@@ -1,6 +1,6 @@
 #' Results by year
 #'
-#' Example file
+#' Example file: Cod results by year.
 #'
 #' @author Einar Hjorleifsson <einar.hjorleifsson@@gmail.com>
 #'
@@ -8,7 +8,7 @@
 
 #' Results by age
 #'
-#' Example file
+#' Example file: Cod results by age
 #'
 #' @author Einar Hjorleifsson <einar.hjorleifsson@@gmail.com>
 #'
