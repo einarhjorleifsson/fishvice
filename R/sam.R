@@ -76,24 +76,24 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   # sam.dat - The observations and auxillary material
 
   # 0. some tidying
-  lin <- readLines(sam.dat)
-  lin <- lin[!lin==""]
-  lin <- stringr::str_trim(lin)
+  dat <- readLines(sam.dat)
+  dat <- dat[!dat==""]
+  dat <- stringr::str_trim(dat)
   # lines without a starting #
-  i <- !stringr::str_locate(lin,"#")[,1] %in% 1
-  lin <- lin[i]
+  i <- !stringr::str_locate(dat,"#")[,1] %in% 1
+  dat <- dat[i]
 
   # 1. header information
-  keys$nFleets <- as.integer(lin[1])
-  keys$nYears  <- as.integer(lin[4])
-  keys$years <-   as.integer(strsplit(lin[5]," ")[[1]])
-  keys$nObs <- as.integer(lin[6])
+  keys$nFleets <- as.integer(dat[1])
+  keys$nYears  <- as.integer(dat[4])
+  keys$years <-   as.integer(strsplit(dat[5]," ")[[1]])
+  keys$nObs <- as.integer(dat[6])
 
-  idx1 <- as.integer(strsplit(lin[7]," ")[[1]])
-  idx2 <- as.integer(strsplit(lin[8]," ")[[1]])
+  idx1 <- as.integer(strsplit(dat[7]," ")[[1]])
+  idx2 <- as.integer(strsplit(dat[8]," ")[[1]])
 
   # chop off header information
-  lin <- lin[9:length(lin)]
+  dat <- dat[9:length(dat)]
 
   # 2. Chunk containing the observation matrix (catch at age and tuning indices)
   #    the data here is stored as a long format (year, fleet, age, obs)
@@ -101,7 +101,7 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   # Note: In the case of e.g. mackerel - in the input files there is age 99
   #       which stands for non-age index (egg survey)
 
-  #ibya <- lin[1:max(idx2)] %>%
+  #ibya <- dat[1:max(idx2)] %>%
   #  strsplit(split = " ") %>%
   #  unlist() %>%
   #  as.numeric() %>%
@@ -112,7 +112,7 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   #colnames(ibya) <- c("year","age","oC",paste0("oU",1:(ncol(ibya)-3)))
 
   # uses hadley approach
-  ibya <- dplyr::data_frame(x = lin[1:max(idx2)]) %>%
+  ibya <- dplyr::data_frame(x = dat[1:max(idx2)]) %>%
     tidyr::separate(col = x,
                     into = c("year","fleet","age","obs"),
                     extra = "merge",
@@ -167,8 +167,8 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   ibya <- ibya2 %>%
     reshape2::melt(c("year","variables"),variable.name="age") %>%
     reshape2::dcast(year + age ~ variables, value.var = "value") %>%
-    mutate(age = as.integer(as.character(age))) %>%
-    left_join(ibya,by=c("year","age"))
+    dplyr::mutate(age = as.integer(as.character(age))) %>%
+    dplyr::full_join(ibya,by=c("year","age"))
 
   # 3b. Additional information
   # ... to be implemented, now ignored
@@ -195,17 +195,20 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
 
   x <- reshape2::dcast(res, year + age ~ fleet, value.var="pre")
   colnames(x) <- c("year","age","pC",paste0("pU",1:(ncol(x)-3)))
-  rbya <- plyr::join(ibya,x,by=c("year","age"))
+  rbya <- dplyr::full_join(ibya,x,by=c("year","age"))
   x <- reshape2::dcast(res, year + age ~ fleet, value.var="res")
   colnames(x) <- c("year","age","rC",paste0("rU",1:(ncol(x)-3)))
-  rbya <- plyr::join(rbya,x,by=c("year","age"))
+  rbya <- dplyr::full_join(rbya,x,by=c("year","age"))
 
   # ----------------------------------------------------------------------------
   # This code is from Anders Nielsen
   lin <- readLines(sam.cor)
   fit <- list()
   fit$npar <- length(lin)-2
-  fit$logDetHess <- as.numeric(strsplit(lin[1], '=')[[1]][2])
+  i <- stringr::str_locate(lin[1],"=")[2]
+  fit$logDetHess <- stringr::str_sub(lin[1],i+1) %>%
+    stringr::str_trim() %>%
+    as.numeric()
   sublin <- lapply(strsplit(lin[1:fit$npar+2], ' '),function(x)x[x!=''])
 
   fit$names <- unlist(lapply(sublin,function(x)x[2]))
@@ -283,13 +286,13 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   x <- plyr::join(N,mort,by=c("year","age"))
   x$f[is.na(x$f)] <- 0
 
-  rbya <- plyr::join(x,rbya,by=c("year","age"))
+  rbya <- dplyr::full_join(rbya,x,by=c("year","age"))
 
   # ----------------------------------------------------------------------------
   # Calculate oY
   oY <- plyr::ddply(rbya, c("year"), plyr::summarise,
                     oY = sum(cW * oC, na.rm=TRUE))
-  rby <- plyr::join(rby, oY, by=c("year"))
+  rby <- dplyr::full_join(rby, oY, by=c("year"))
 
   return(list(rbya=rbya,rby=rby))
 
@@ -442,7 +445,7 @@ sam_get_results <- function(assessment="WBcod_2015_short",user="user3") {
   mort <- reshape2::melt(mort,factorsAsStrings = FALSE)
   names(mort) <- c("year","age","f")
 
-  rbya <- plyr::join(N,mort,by=c("year","age"))
+  rbya <- dplyr::full_join(N,mort,by=c("year","age"))
   rbya$f[is.na(rbya$f)] <- 0
 
   # Get the input files
