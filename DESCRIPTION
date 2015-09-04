@@ -15,11 +15,10 @@ Imports:
   ggplot2,
   grid,
   gridExtra,
-  httr,
   plyr,
   reshape2,
   stringr,
-  XML
+  tidyr
 License: GPL (>= 2)
 LazyData: TRUE
 URL: http://github.com/einarhjorleifsson/fishvice

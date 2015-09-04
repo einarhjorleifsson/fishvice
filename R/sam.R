@@ -68,13 +68,14 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
     confclone.log <- paste0(directory,"/run/confclone.log")
   }
 
+  # keys will collate various information
   keys <- list()
-
-
-  # ----------------------------------------------------------------------------
-  # The input data
   keys$stateDim <- scan(sam.rep, quiet=TRUE)[1]
 
+  # ----------------------------------------------------------------------------
+  # sam.dat - The observations and auxillary material
+
+  # 0. some tidying
   lin <- readLines(sam.dat)
   lin <- lin[!lin==""]
   lin <- stringr::str_trim(lin)
@@ -82,77 +83,95 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   i <- !stringr::str_locate(lin,"#")[,1] %in% 1
   lin <- lin[i]
 
+  # 1. header information
   keys$nFleets <- as.integer(lin[1])
   keys$nYears  <- as.integer(lin[4])
   keys$years <-   as.integer(strsplit(lin[5]," ")[[1]])
+  keys$nObs <- as.integer(lin[6])
 
   idx1 <- as.integer(strsplit(lin[7]," ")[[1]])
   idx2 <- as.integer(strsplit(lin[8]," ")[[1]])
 
+  # chop off header information
   lin <- lin[9:length(lin)]
-  sublin <- lin[1:max(idx2)]
-  ibya <- as.data.frame(matrix(as.numeric(unlist(strsplit(sublin," "))),ncol = 4, byrow = TRUE))
-  colnames(ibya) <- c("year","fleet","age","obs")
-  ibya <- reshape2::dcast(ibya, year + age ~ fleet, value.var = "obs")
+
+  # 2. Chunk containing the observation matrix (catch at age and tuning indices)
+  #    the data here is stored as a long format (year, fleet, age, obs)
+  #    Here we convert the data such that each tuning fleet is a column
+  # Note: In the case of e.g. mackerel - in the input files there is age 99
+  #       which stands for non-age index (egg survey)
+
+  #ibya <- lin[1:max(idx2)] %>%
+  #  strsplit(split = " ") %>%
+  #  unlist() %>%
+  #  as.numeric() %>%
+  #  matrix(ncol = 4, byrow = TRUE) %>%
+  #  as.data.frame() %>%
+  #  dplyr::rename(year = V1, fleet = V2, age = V3, obs = V4) %>%
+  #  reshape2::dcast(year + age ~ fleet, value.var = "obs")
+  #colnames(ibya) <- c("year","age","oC",paste0("oU",1:(ncol(ibya)-3)))
+
+  # uses hadley approach
+  ibya <- dplyr::data_frame(x = lin[1:max(idx2)]) %>%
+    tidyr::separate(col = x,
+                    into = c("year","fleet","age","obs"),
+                    extra = "merge",
+                    convert = TRUE) %>%
+    tidyr::spread(key = fleet, value = obs)
   colnames(ibya) <- c("year","age","oC",paste0("oU",1:(ncol(ibya)-3)))
 
-  # 2015-09-03 amendments
-  # In the case of mackerel - in the input files there is age 99
-  # which stands for non-age index (egg survey)
+  # 3. Chunk containing the auxillary information - weights and assumptions
+  #    i.e. weights, M, pF and pM
 
+  # First get the ages
   ages <- sort(unique(ibya$age))
   ages <- ages[ages != 99]
 
   keys$minAge <- min(ages)
   keys$maxAge <- max(ages)
-  keys$nAges <- length(ages)
-  keys$ages <- c(keys$minAge:keys$maxAge)
+  keys$nAges  <- length(ages)
+  keys$ages   <- c(keys$minAge:keys$maxAge)
 
-  # 2015-09-03 amendments
-  # In the case of mackerel - length(lin) does not work on this part
-  x <- lin[(max(idx2)+1):length(lin)] %>%
-    stringr::str_trim() %>%
-    stringr::str_replace_all(pattern = '\t',replacement = ' ') %>%
-    stringr::str_split(pattern=' ') %>%
-    # there should be a more clever way than using unlist and then matrix here
-    unlist() %>%
-    as.numeric() %>%
-    matrix(ncol = keys$nAges, byrow = TRUE) %>%
-    as.data.frame()
-  colnames(x) <- c(keys$minAge:keys$maxAge)
-
-
-  n1 <- length(keys$years)
-  if(floor(nrow(x)/n1) == nrow(x)/n1) {
-    n2 <- n1
-  } else {
-    n2 <- n1-1
-  }
-
-  x$year <- c(keys$years,                        # proportion mature
-                 keys$years,                        # stock weights
-                 keys$years[1:n2],                  # catch weights
-                 keys$years,                        # natural mortality
-                 keys$years[1:n2],                  # landing fraction
-                 keys$years[1:n2],                  # discard weights
-                 keys$years[1:n2],                  # landing weights
-                 keys$years,                        # pF
-                 keys$years)                        # pM
-
-  x$variables <- c(rep("mat",n1),
-                      rep("sW",n1),
-                      rep("cW",n2),
-                      rep("m", n1),
-                      rep("fL",n2),
-                      rep("dW",n2),
-                      rep("lW",n2),
-                      rep("pF",n1),
-                      rep("pM",n1))
-  ibya <- x %>%
+  # 3a. Get weights and assumptions (M, pF and pM)
+  # Problem - There may be additional auxillary information (e.g. Mackerel: tagging
+  #               data, nsCod: year multipliers on catches)
+  #               Hence start by getting the line counts
+  n_years_total <- length(keys$years)
+  n_years_catch <- length(unique(ibya$year[!is.na(ibya$oC)]))
+  # 5 matrices: mat, sW, M, pF, pM
+  # 4 matrices: cW, dW, lW, fD
+  n <- n_years_total * 5 + n_years_catch * 4
+  ibya2 <- dplyr::data_frame(x=lin[(max(idx2)+1):(max(idx2) + n)]) %>%
+    tidyr::separate(col=x,
+                    into = as.character(ages),
+                    sep = "[^[:alnum:]|^[:punct:]]+",
+                    convert = TRUE)
+  ibya2$variables <- c(rep("mat",n_years_total),
+                       rep("sW",n_years_total),
+                       rep("cW",n_years_catch),
+                       rep("m", n_years_total),
+                       rep("fL",n_years_catch),
+                       rep("dW",n_years_catch),
+                       rep("lW",n_years_catch),
+                       rep("pF",n_years_total),
+                       rep("pM",n_years_total))
+  ibya2$year <- c(keys$years,                        # proportion mature
+                  keys$years,                        # stock weights
+                  keys$years[1:n_years_catch],       # catch weights
+                  keys$years,                        # natural mortality
+                  keys$years[1:n_years_catch],       # landing fraction
+                  keys$years[1:n_years_catch],       # discard weights
+                  keys$years[1:n_years_catch],       # landing weights
+                  keys$years,                        # pF
+                  keys$years)                        # pM
+  ibya <- ibya2 %>%
     reshape2::melt(c("year","variables"),variable.name="age") %>%
     reshape2::dcast(year + age ~ variables, value.var = "value") %>%
     mutate(age = as.integer(as.character(age))) %>%
     left_join(ibya,by=c("year","age"))
+
+  # 3b. Additional information
+  # ... to be implemented, now ignored
 
   # ----------------------------------------------------------------------------
   # Dimensions
