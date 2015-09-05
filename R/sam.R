@@ -242,6 +242,12 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   ssb      <- mslh('ssb' ,keys$years)
   fbar     <- mslh('fbar' ,keys$years)
   bio      <- mslh('tsb', keys$years)
+  yield    <- mslh('logCatch', keys$years[1:(length(keys$years)-1)])
+  names(yield) <- c("yield","yield_std","yield_low","yield_hig","year")
+  yield <- yield %>%
+    mutate(yield = exp(yield),
+           yield_low = exp(yield_low),
+           yield_hig = exp(yield_hig))
 
 
   x <- mslh('U')
@@ -259,6 +265,7 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   rby <- plyr::join(ssb,fbar, by="year")
   rby <- plyr::join(rby,bio, by="year")
   rby <- plyr::join(rby,rec, by="year")
+  rby <- plyr::join(rby,yield, by = "year")
 
   #if(reduced){
   #  fit <- fit[which(!names(fit)%in%c('cov','cor'))]
