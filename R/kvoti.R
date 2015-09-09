@@ -12,7 +12,8 @@
 kvota_stada <- function(sid = c(1,2,3,5,6,7,8,9,11,22,23,24,25,27,28,30,31,34,36,40,41,61))
   {
 
-  mar <- dplyrOracle::src_oracle("mar")
+  #mar <- dplyrOracle::src_oracle("mar")
+  mar <- 0
 
   # --------------------------------------------------------
   # species list

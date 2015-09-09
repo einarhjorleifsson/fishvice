@@ -10,7 +10,6 @@ Depends:
   R (>= 3.1.0),
   dplyr
 Imports:
-  dplyrOracle,
   FLCore,
   ggplot2,
   grid,
