@@ -7,13 +7,13 @@
 #' @export
 #'
 #' @param file name of file, normally the index file name
-#' @param format output format, "matrix","wide","long"
+#' @param format output format, "matrix","wide","long" (default)
 #' @param value.name Name of value, only relevant for format="long"
 #' @param sep the separator, default is ""
 #' @param quiet boolean, default is TRUE
 
 
-read_lowestoft <- function(file, format="matrix", value.name="x",sep = "", quiet = TRUE) {
+read_lowestoft2 <- function(file, format="long", value.name="x",sep = "", quiet = TRUE) {
 
   if (!file.exists(file))
     {
@@ -102,11 +102,11 @@ read_lowestoft <- function(file, format="matrix", value.name="x",sep = "", quiet
     res <- reshape2::melt(res,"year",variable.name="age",value.name = value.name)
     res$age <- as.integer(as.character(res$age))
     res[,3] <- as.numeric(res[,3])
-  return(res)
+  return(dplyr::as_data_frame(res))
   }
 }
 
-#' @title read_lowestoft2
+#' @title read_lowestoft
 #'
 #' @description Modified \href{https://github.com/flr/FLCore/blob/master/R/io.VPAsuite.R}{FLCore::readVPA}
 #' function in the FLCore-package, except here it only returns a list or a data.frame
@@ -115,11 +115,12 @@ read_lowestoft <- function(file, format="matrix", value.name="x",sep = "", quiet
 #'
 #' @param file name of file, normally the index file name
 #' @param sep the separator, default is ""
-#' @param format character vector specifying output format. Default is "data.frame",
+#' @param format character vector specifying output format: "long" (default),
+#' "wide" or "list"
 #' but can also use "list" which returns a list of matrices.
 #' @param quiet boolean, default is TRUE
 
-read_lowestoft2 <- function(file, sep = "", format = "data.frame", quiet=TRUE) {
+read_lowestoft <- function(file, sep = "", format = "long", quiet=TRUE) {
   if (!file.exists(file)){
     if(quiet!=TRUE) message(paste("VPA index file", file, "does not exist"))
     return(NULL)
@@ -141,7 +142,7 @@ read_lowestoft2 <- function(file, sep = "", format = "data.frame", quiet=TRUE) {
       if(quiet != TRUE) cat("File ", i, "does not exist", "\n")
     }
     if (file.exists(i)) {
-      a. <- read_lowestoft(i, sep=sep, quiet=quiet)
+      a. <- read_lowestoft2(i, format = "matrix", sep=sep, quiet=quiet)
       switch(as.character(scan(i, skip = 1, nlines = 1, sep = sep, comment.char='#', quiet=TRUE)[2]),
              "1" = res$landings <-a.,
              "2" = res$landings.n <-a.,
@@ -180,66 +181,66 @@ read_lowestoft2 <- function(file, sep = "", format = "data.frame", quiet=TRUE) {
     bya$oC <- bya$oL
   } else {
     x <- reshape2::melt(res$catch.n,value.name="oC")
-    bya <- plyr::join(bya,x,by=c("year","age"))
+    bya <- dplyr::full_join(bya,x,by=c("year","age"))
   }
   # Discards
   if(is.null(res$discards.n)) {
     bya$oD <- 0
   } else {
     x <- reshape2::melt(res$discards.n,value.name="oD")
-    bya <- plyr::join(bya,x,by=c("year","age"))
+    bya <- dplyr::full_join(bya,x,by=c("year","age"))
   }
   # Landings weight
   x <- reshape2::melt(res$landings.wt,value.name="lW")
-  bya <- plyr::join(bya,x,by=c("year","age"))
+  bya <- dplyr::full_join(bya,x,by=c("year","age"))
   # Catch weigths
   if(is.null(res$catch.wt)) {
     bya$cW <- bya$lW
   } else {
     x <- reshape2::melt(res$catch.wt,value.name="cW")
-    bya <- plyr::join(bya,x,by=c("year","age"))
+    bya <- dplyr::full_join(bya,x,by=c("year","age"))
   }
   # Discard weights
   if(is.null(res$discards.wt)) {
     bya$dW <- 0
   } else {
     x <- reshape2::melt(res$discards.wt,value.name="dW")
-    bya <- plyr::join(bya,x,by=c("year","age"))
+    bya <- dplyr::full_join(bya,x,by=c("year","age"))
   }
   # SSB weights
   if(is.null(res$stock.wt)) {
     bya$ssbW <- bya$catch.wt
   } else {
     x <- reshape2::melt(res$stock.wt,value.name="ssbW")
-    bya <- plyr::join(bya,x,by=c("year","age"))
+    bya <- dplyr::full_join(bya,x,by=c("year","age"))
   }
   # Maturity
   if(is.null(res$mat)) {
     bya$mat <- NA
   } else {
     x <- reshape2::melt(res$mat,value.name="mat")
-    bya <- plyr::join(bya,x,by=c("year","age"))
+    bya <- dplyr::full_join(bya,x,by=c("year","age"))
   }
   # M
   if(is.null(res$m)) {
     bya$m <- NA
   } else {
     x <- reshape2::melt(res$m,value.name="m")
-    bya <- plyr::join(bya,x,by=c("year","age"))
+    bya <- dplyr::full_join(bya,x,by=c("year","age"))
   }
   # pF
   if(is.null(res$harvest.spwn)) {
     bya$pF <- NA
   } else {
     x <- reshape2::melt(res$harvest.spwn,value.name="pF")
-    bya <- plyr::join(bya,x,by=c("year","age"))
+    bya <- dplyr::full_join(bya,x,by=c("year","age"))
   }
   # pM
   if(is.null(res$m.spwn)) {
     bya$pM <- NA
   } else {
     x <- reshape2::melt(res$m.spwn,value.name="pM")
-    bya <- plyr::join(bya,x,by=c("year","age"))
+    bya <- dplyr::full_join(bya,x,by=c("year","age"))
   }
   # fishing mortality
   # Problem here is that res$harvest.spwn gets tested
@@ -250,12 +251,74 @@ read_lowestoft2 <- function(file, sep = "", format = "data.frame", quiet=TRUE) {
   # stock in numbers
   if(!is.null(res$stock.n)) {
     x <- reshape2::melt(res$stock.n,value.name="n")
-    bya <- plyr::join(bya,x,by=c("year","age"))
+    bya <- dplyr::full_join(bya,x,by=c("year","age"))
   }
 
-  if(format == "data.frame") {
-    res <- bya[order(bya$year),]
+  if(format == "long") {
+    res <- bya[order(bya$year),] %>%
+      dplyr::as_data_frame()
   }
 
   return(res)
 }
+
+#' @title Read in Lowestoft-format survey data
+#'
+#' @export
+#'
+#' @param filename The name of the file to read in
+#' @param format Character, if "data.frame" (default) returns a data.frame
+#' otherwise a list.
+read_lowestoft_survey <- function(filename, format="data.frame")
+{
+  n <- scan(filename, skip = 1, nlines = 1, quiet = TRUE) - 100
+  idx <- vector("list", length = n)
+  start <- 3
+  for (k in 1:n)
+  {
+    idx[[k]]$name <- paste(scan(filename, skip = start - 1, nlines = 1,
+                                what = character(0), quiet = TRUE), collapse = " ")
+    temp <- scan(filename, skip = start, nlines = 1, quiet = TRUE)
+    idx[[k]]$y1 <- temp[1]
+    idx[[k]]$y2 <- temp[2]
+    idx[[k]]$ny <- temp[2] - temp[1] + 1
+    temp <- scan(filename, skip = start + 1, nlines = 1, quiet = TRUE)
+    idx[[k]]$rho <- 0.5 * (temp[4] + temp[3])
+    temp <- scan(filename, skip = start + 2, nlines = 1, quiet = TRUE)
+    idx[[k]]$a1 <- temp[1]
+    idx[[k]]$a2 <- temp[2]
+    idx[[k]]$na <- temp[2] - temp[1] + 1
+    idx[[k]]$tab <- read.table(filename, skip = start + 3, nrows = idx[[k]]$ny)
+    temp <- idx[[k]]$tab[,2:(idx[[k]]$na + 1)]
+    effort <- idx[[k]]$tab[,1]
+    idx[[k]]$tab <- data.frame(temp / effort)
+    names(idx[[k]]$tab) <- idx[[k]]$a1:idx[[k]]$a2
+    rownames(idx[[k]]$tab) <- idx[[k]]$y1:idx[[k]]$y2
+    start <- start + 4 + idx[[k]]$ny
+  }
+
+  res <- list(n = n, idx = idx)
+
+  if(format == "data.frame") {
+    for (i in 1:n) {
+      x <- res$idx[[i]]
+      x1 <- x$tab
+      x1$year <- as.integer(rownames(x1))
+      x1 <- reshape2::melt(x1,"year", variable.name = "age")
+      x1$sur <- x$name
+      if(i == 1) {
+        tmp <- x1
+      } else {
+        tmp <- rbind(tmp, x1)
+      }
+    }
+    res <- tmp
+    res$age <- as.integer(as.character(res$age))
+
+  }
+
+  return(res)
+}
+
+
+

@@ -1,0 +1,6 @@
+Proportion Mature at Year Start
+1       6
+1957    2014
+1       15
+2
+0       0.5     0.5     1       1       1       1       1       1       1       1       1       1       1       1

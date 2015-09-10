@@ -1,0 +1,6 @@
+Proportion of F before Spawning
+1         7
+1957      2014
+1         15
+3
+0         

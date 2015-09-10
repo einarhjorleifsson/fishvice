@@ -4,8 +4,8 @@
 \alias{read_mcmc}
 \title{Read mcmc files}
 \usage{
-read_mcmc(path = Path, run = Run, variable = c("catch", "ssb", "f", "n3",
-  "refbio"), years, hrates, nIter, sDir = "msyresults")
+read_mcmc(path, run, variable = c("catch", "ssb", "f", "n3", "refbio"), years,
+  hrates, nIter, sDir = "msyresults")
 }
 \arguments{
 \item{path}{Path to the root directory}

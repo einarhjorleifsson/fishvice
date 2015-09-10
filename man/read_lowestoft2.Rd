@@ -2,22 +2,25 @@
 % Please edit documentation in R/rw_lowestoft.R
 \name{read_lowestoft2}
 \alias{read_lowestoft2}
-\title{read_lowestoft2}
+\title{read_lowestoft_file}
 \usage{
-read_lowestoft2(file, sep = "", format = "data.frame", quiet = TRUE)
+read_lowestoft2(file, format = "long", value.name = "x", sep = "",
+  quiet = TRUE)
 }
 \arguments{
 \item{file}{name of file, normally the index file name}
 
-\item{sep}{the separator, default is ""}
+\item{format}{output format, "matrix","wide","long" (default)}
 
-\item{format}{character vector specifying output format. Default is "data.frame",
-but can also use "list" which returns a list of matrices.}
+\item{value.name}{Name of value, only relevant for format="long"}
+
+\item{sep}{the separator, default is ""}
 
 \item{quiet}{boolean, default is TRUE}
 }
 \description{
-Modified \href{https://github.com/flr/FLCore/blob/master/R/io.VPAsuite.R}{FLCore::readVPA}
-function in the FLCore-package, except here it only returns a list or a data.frame
+The code is inpired by the
+ \href{https://github.com/flr/FLCore/blob/master/R/io.VPAsuite.R}{FLCore::readVPAFile} function.
+The difference is that it is not dependent on the FLCore, including the S4-methods.
 }
 

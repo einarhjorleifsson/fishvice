@@ -1,0 +1,6 @@
+Natural Mortality
+1       5
+1957    2014
+1       15
+3
+0.1     

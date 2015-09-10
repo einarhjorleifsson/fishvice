@@ -12,8 +12,10 @@ vignette: >
 ## Western baltic cod
 ```{r, message=FALSE}
 # devtools::install_github("einarhjorleifsson/fishvice")
-require(fishvice)
-require(ggplot2)
+library(fishvice)
+library(ggplot2)
+library(dplyr)
+
 rbx <- read_sam(directory="WBcod_2015_short", from_web = TRUE)
 blob <- sam_process_error(rbx$rbya, plot_it=TRUE)
 blob$mass

@@ -1,0 +1,6 @@
+Proportion of M before Spawning
+1         8
+1957      2014
+1         15
+3
+0
