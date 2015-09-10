@@ -7,14 +7,16 @@ Authors@R: person("Einar", "Hjorleifsson", email = "einarhjorleifsson@gmail.com"
   role = c("aut", "cre"))
 Description: Miscalaneous functions, ..
 Depends:
-  R (>= 3.1.0),
-  dplyr
+  R (>= 3.1.0)
 Imports:
+  dplyr,
   FLCore,
   ggplot2,
   grid,
   gridExtra,
+  magrittr,
   plyr,
+  RColorBrewer,
   reshape2,
   stringr,
   tidyr

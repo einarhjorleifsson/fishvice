@@ -4,13 +4,13 @@
 \alias{read_lowestoft}
 \title{read_lowestoft_file}
 \usage{
-read_lowestoft(file, format = "matrix", value.name = "x", sep = "",
+read_lowestoft(file, format = "long", value.name = "x", sep = "",
   quiet = TRUE)
 }
 \arguments{
 \item{file}{name of file, normally the index file name}
 
-\item{format}{output format, "matrix","wide","long"}
+\item{format}{output format, "matrix","wide","long" (default)}
 
 \item{value.name}{Name of value, only relevant for format="long"}
 

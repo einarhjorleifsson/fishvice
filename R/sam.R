@@ -47,7 +47,8 @@ sam_get_directory <- function(assessment, user="user3") {
 read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3") {
 
   # dummies
-  cW <- oC <- 0
+  cW <- oC <- fleet <- obs <- age <-
+    yield_low <- yield_hig <- 0
 
   if(from_web) {
     URL <- paste("https://www.stockassessment.org/datadisk/stockassessment/userdirs",user,directory,sep="/")
@@ -245,7 +246,7 @@ read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3")
   yield    <- mslh('logCatch', keys$years[1:(length(keys$years)-1)])
   names(yield) <- c("yield","yield_std","yield_low","yield_hig","year")
   yield <- yield %>%
-    mutate(yield = exp(yield),
+    dplyr::mutate(yield = exp(yield),
            yield_low = exp(yield_low),
            yield_hig = exp(yield_hig))
 

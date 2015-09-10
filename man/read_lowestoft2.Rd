@@ -4,14 +4,15 @@
 \alias{read_lowestoft2}
 \title{read_lowestoft2}
 \usage{
-read_lowestoft2(file, sep = "", format = "data.frame", quiet = TRUE)
+read_lowestoft2(file, sep = "", format = "long", quiet = TRUE)
 }
 \arguments{
 \item{file}{name of file, normally the index file name}
 
 \item{sep}{the separator, default is ""}
 
-\item{format}{character vector specifying output format. Default is "data.frame",
+\item{format}{character vector specifying output format: "long" (default),
+"wide" or "list"
 but can also use "list" which returns a list of matrices.}
 
 \item{quiet}{boolean, default is TRUE}

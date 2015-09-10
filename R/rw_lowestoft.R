@@ -7,13 +7,13 @@
 #' @export
 #'
 #' @param file name of file, normally the index file name
-#' @param format output format, "matrix","wide","long"
+#' @param format output format, "matrix","wide","long" (default)
 #' @param value.name Name of value, only relevant for format="long"
 #' @param sep the separator, default is ""
 #' @param quiet boolean, default is TRUE
 
 
-read_lowestoft <- function(file, format="matrix", value.name="x",sep = "", quiet = TRUE) {
+read_lowestoft <- function(file, format="long", value.name="x",sep = "", quiet = TRUE) {
 
   if (!file.exists(file))
     {
@@ -115,11 +115,12 @@ read_lowestoft <- function(file, format="matrix", value.name="x",sep = "", quiet
 #'
 #' @param file name of file, normally the index file name
 #' @param sep the separator, default is ""
-#' @param format character vector specifying output format. Default is "data.frame",
+#' @param format character vector specifying output format: "long" (default),
+#' "wide" or "list"
 #' but can also use "list" which returns a list of matrices.
 #' @param quiet boolean, default is TRUE
 
-read_lowestoft2 <- function(file, sep = "", format = "data.frame", quiet=TRUE) {
+read_lowestoft2 <- function(file, sep = "", format = "long", quiet=TRUE) {
   if (!file.exists(file)){
     if(quiet!=TRUE) message(paste("VPA index file", file, "does not exist"))
     return(NULL)
@@ -141,7 +142,7 @@ read_lowestoft2 <- function(file, sep = "", format = "data.frame", quiet=TRUE) {
       if(quiet != TRUE) cat("File ", i, "does not exist", "\n")
     }
     if (file.exists(i)) {
-      a. <- read_lowestoft(i, sep=sep, quiet=quiet)
+      a. <- read_lowestoft(i, format = "matrix", sep=sep, quiet=quiet)
       switch(as.character(scan(i, skip = 1, nlines = 1, sep = sep, comment.char='#', quiet=TRUE)[2]),
              "1" = res$landings <-a.,
              "2" = res$landings.n <-a.,
@@ -259,3 +260,64 @@ read_lowestoft2 <- function(file, sep = "", format = "data.frame", quiet=TRUE) {
 
   return(res)
 }
+
+#' @title Read in Lowestoft-format survey data
+#'
+#' @export
+#'
+#' @param filename The name of the file to read in
+#' @param format Character, if "data.frame" (default) returns a data.frame
+#' otherwise a list.
+read_lowestoft_survey <- function(filename, format="data.frame")
+{
+  n <- scan(filename, skip = 1, nlines = 1, quiet = TRUE) - 100
+  idx <- vector("list", length = n)
+  start <- 3
+  for (k in 1:n)
+  {
+    idx[[k]]$name <- paste(scan(filename, skip = start - 1, nlines = 1,
+                                what = character(0), quiet = TRUE), collapse = " ")
+    temp <- scan(filename, skip = start, nlines = 1, quiet = TRUE)
+    idx[[k]]$y1 <- temp[1]
+    idx[[k]]$y2 <- temp[2]
+    idx[[k]]$ny <- temp[2] - temp[1] + 1
+    temp <- scan(filename, skip = start + 1, nlines = 1, quiet = TRUE)
+    idx[[k]]$rho <- 0.5 * (temp[4] + temp[3])
+    temp <- scan(filename, skip = start + 2, nlines = 1, quiet = TRUE)
+    idx[[k]]$a1 <- temp[1]
+    idx[[k]]$a2 <- temp[2]
+    idx[[k]]$na <- temp[2] - temp[1] + 1
+    idx[[k]]$tab <- read.table(filename, skip = start + 3, nrows = idx[[k]]$ny)
+    temp <- idx[[k]]$tab[,2:(idx[[k]]$na + 1)]
+    effort <- idx[[k]]$tab[,1]
+    idx[[k]]$tab <- data.frame(temp / effort)
+    names(idx[[k]]$tab) <- idx[[k]]$a1:idx[[k]]$a2
+    rownames(idx[[k]]$tab) <- idx[[k]]$y1:idx[[k]]$y2
+    start <- start + 4 + idx[[k]]$ny
+  }
+
+  res <- list(n = n, idx = idx)
+
+  if(format == "data.frame") {
+    for (i in 1:n) {
+      x <- res$idx[[i]]
+      x1 <- x$tab
+      x1$year <- as.integer(rownames(x1))
+      x1 <- reshape2::melt(x1,"year", variable.name = "age")
+      x1$sur <- x$name
+      if(i == 1) {
+        tmp <- x1
+      } else {
+        tmp <- rbind(tmp, x1)
+      }
+    }
+    res <- tmp
+    res$age <- as.integer(as.character(res$age))
+
+  }
+
+  return(res)
+}
+
+
+
