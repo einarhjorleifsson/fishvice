@@ -12,7 +12,6 @@
 #' @param sep the separator, default is ""
 #' @param quiet boolean, default is TRUE
 
-
 read_lowestoft2 <- function(file, format="long", value.name="x",sep = "", quiet = TRUE) {
 
   if (!file.exists(file))
@@ -119,6 +118,7 @@ read_lowestoft2 <- function(file, format="long", value.name="x",sep = "", quiet 
 #' "wide" or "list"
 #' but can also use "list" which returns a list of matrices.
 #' @param quiet boolean, default is TRUE
+
 
 read_lowestoft <- function(file, sep = "", format = "long", quiet=TRUE) {
   if (!file.exists(file)){
@@ -314,6 +314,7 @@ read_lowestoft_survey <- function(filename, format="data.frame")
     }
     res <- tmp
     res$age <- as.integer(as.character(res$age))
+    res <- dplyr::as_data_frame(res)
 
   }
 
