@@ -28,7 +28,7 @@ get_file <- function(URL,File)
 #' @param retroY The retrospective year
 #' @return A list with \code{data.frame} rby, rbya and rba
 #' @seealso \code{\link{read_separ}} for reading separate model output and \code{\link{read_adapt}} for reading adapt model output
-read_adcam <- function (path,run,rName=NA,mName=NA,calcSurBio=T,ggFactor=T,Scale=1e3,assYear=NA,retroY=NA) {
+read_adcam <- function (path,run,rName=NA,mName=NA,calcSurBio=T,ggFactor=F,Scale=1e3,assYear=NA,retroY=NA) {
   cnRby <- c("year","r","n3","n6","bioF","bio","bio1","ssb","ssb2","fbar","hr",
     "oY","pY","oU1","pU1","oU2","pU2","run","model")
   cnRbya <- c("year","age","oC","cW","sW","ssbW","mat","n","z","f","m",
@@ -131,7 +131,7 @@ read_adcam <- function (path,run,rName=NA,mName=NA,calcSurBio=T,ggFactor=T,Scale
 #' @param retroY The retrospective year
 #' @return A list with \code{data.frame} rby, rbya and rba
 #' @seealso \code{\link{read_separ}} for reading separate model output and \code{\link{read_adcam}} for reading adcam model output
-read_adapt <- function (path,run,rName=NA,mName=NA,calcSurBio=F,ggFactor=T,Scale=1e3,assYear=NA,retroY=NA) {
+read_adapt <- function (path,run,rName=NA,mName=NA,calcSurBio=F,ggFactor=F,Scale=1e3,assYear=NA,retroY=NA) {
 
   cnRby <- c("year","r","n3","n6","bioF","bio","bio1","ssb","ssb2","fbar","hr",
     "oY","pY","oU1","pU1","oU2","pU2","run","model")
