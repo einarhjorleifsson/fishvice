@@ -5,7 +5,7 @@
 \title{Reads 'adcam' assessment results}
 \usage{
 read_adcam(path, run, rName = NA, mName = NA, calcSurBio = T,
-  ggFactor = T, Scale = 1000, assYear = NA, retroY = NA)
+  ggFactor = F, Scale = 1000, assYear = NA, retroY = NA)
 }
 \arguments{
 \item{path}{Path to the runs, here the 'root' path to the runs.}
