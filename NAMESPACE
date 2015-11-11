@@ -2,6 +2,8 @@
 
 export(flstock_to_rbya)
 export(get_sam_directory)
+export(get_worms_id)
+export(get_worms_record)
 export(ices_standard_graph)
 export(r2lat)
 export(r2lon)

@@ -17,6 +17,7 @@ Imports:
   magrittr,
   plyr,
   RColorBrewer,
+  RCurl,
   reshape2,
   stringr,
   tidyr
