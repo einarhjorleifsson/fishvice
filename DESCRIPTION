@@ -1,8 +1,8 @@
 Package: fishvice
 Type: Package
 Title: A collection of various personal functions used in stock assessment
-Version: 0.0.4.9000
-Date: 2016-01-15
+Version: 0.0.4.9001
+Date: 2016-03-08
 Authors@R: person("Einar", "Hjorleifsson", email = "einarhjorleifsson@gmail.com",
   role = c("aut", "cre"))
 Description: Miscalaneous personal functions.
@@ -10,13 +10,11 @@ Depends:
     R (>= 3.1.0)
 Imports:
     dplyr,
-    FLCore,
     ggplot2,
     grid,
     gridExtra,
     magrittr,
     plyr,
-    RColorBrewer,
     RCurl,
     reshape2,
     stringr,

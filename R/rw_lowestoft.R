@@ -269,6 +269,8 @@ read_lowestoft <- function(file, sep = "", format = "long", quiet=TRUE) {
 
 #' @title Read in Lowestoft-format survey data
 #'
+#' @description Reads in survey data in the Lowestoft format.
+#'
 #' @export
 #'
 #' @param filename The name of the file to read in

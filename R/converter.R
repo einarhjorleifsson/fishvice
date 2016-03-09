@@ -16,21 +16,21 @@
 flstock_to_rbya <- function(x, scale=1, project = TRUE, plusgroup = TRUE)
 {
 
-  y <- reshape2::melt(FLCore::stock.n(x),value.name = "n")[,c("year","age","n")]
-  y$n <- y$n/scale
-  y$f <- reshape2::melt(FLCore::harvest(x))[,c("value")]
+  y    <- reshape2::melt(x@stock.n@.Data,value.name = "n")[,c("year","age","n")]
+  y$n  <- y$n/scale
+  y$f  <- reshape2::melt(x@harvest@.Data)[,c("value")]
   # if(class(x) != "FLSAM") {  # This may be needed
-  y$oC <- reshape2::melt(FLCore::catch.n(x))[,c("value")]/scale
-  y$cW <- reshape2::melt(FLCore::catch.wt(x))[,c("value")]
-  y$sW <- reshape2::melt(FLCore::stock.wt(x))[,c("value")]
-  y$oD  = reshape2::melt(FLCore::discards.n(x))[,c("value")]/scale
-  y$dW  = reshape2::melt(FLCore::discards.wt(x))[,c("value")]
-  y$oL  = reshape2::melt(FLCore::landings.n(x))[,c("value")]/scale
-  y$lW  = reshape2::melt(FLCore::landings.wt(x))[,c("value")]
-  y$mat = reshape2::melt(FLCore::mat(x))[,c("value")]
-  y$pF  = reshape2::melt(FLCore::harvest.spwn(x))[,c("value")]
-  y$pM  = reshape2::melt(FLCore::m.spwn(x))[,c("value")]
-  y$m   = reshape2::melt(FLCore::m(x))[,c("value")]
+  y$oC <- reshape2::melt(x@catch.n@.Data)[,c("value")]/scale
+  y$cW <- reshape2::melt(x@catch.wt@.Data)[,c("value")]
+  y$sW <- reshape2::melt(x@stock.wt@.Data)[,c("value")]
+  y$oD  = reshape2::melt(x@discards.n@.Data)[,c("value")]/scale
+  y$dW  = reshape2::melt(x@discards.wt@.Data)[,c("value")]
+  y$oL  = reshape2::melt(x@landings.n@.Data)[,c("value")]/scale
+  y$lW  = reshape2::melt(x@landings.wt@.Data)[,c("value")]
+  y$mat = reshape2::melt(x@mat@.Data)[,c("value")]
+  y$pF  = reshape2::melt(x@harvest.spwn@.Data)[,c("value")]
+  y$pM  = reshape2::melt(x@m.spwn@.Data)[,c("value")]
+  y$m   = reshape2::melt(x@m@.Data)[,c("value")]
 
   # propagate stock forward
   if (project) {

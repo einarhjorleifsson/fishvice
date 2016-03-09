@@ -14,6 +14,8 @@
 
 get_sam_directory <- function(assessment, user="user3") {
 
+  message("Function will be dropped from this package. See package 'ramsam'")
+
   path <- paste("https://www.stockassessment.org/datadisk/stockassessment/userdirs",user,assessment,sep="/")
   cmd <- paste0("wget --recursive --reject=png,html --level=0 --no-parent ",path,"/")
   system(cmd)
@@ -45,6 +47,8 @@ get_sam_directory <- function(assessment, user="user3") {
 #' @param user User name if reading from www.stockassessment.org, guest users can use "user3" (default)
 
 read_sam <- function(directory="WBcod_2015_short", from_web=FALSE, user="user3") {
+
+  message("Function will be dropped from this package. See package 'ramsam'")
 
   # dummies
   cW <- oC <- fleet <- obs <- age <-
