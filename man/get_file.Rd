@@ -11,4 +11,7 @@ get_file(URL, File)
 
 \item{File}{Name of the file}
 }
+\description{
+Gets a file from the web.
+}
 
