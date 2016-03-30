@@ -12,4 +12,7 @@ read_lowestoft_survey(filename, format = "data.frame")
 \item{format}{Character, if "data.frame" (default) returns a data.frame
 otherwise a list.}
 }
+\description{
+Reads in survey data in the Lowestoft format.
+}
 

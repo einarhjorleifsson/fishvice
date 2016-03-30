@@ -15,6 +15,7 @@ Imports:
     gridExtra,
     magrittr,
     plyr,
+    purrr,
     RCurl,
     reshape2,
     stringr,
