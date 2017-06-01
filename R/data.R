@@ -1,6 +1,6 @@
 #' Results by year
 #'
-#' Example file: Cod results by year.
+#' Example file: Cod results by year
 #'
 #' @author Einar Hjorleifsson <einar.hjorleifsson@@gmail.com>
 #'
