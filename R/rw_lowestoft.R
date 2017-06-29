@@ -118,9 +118,10 @@ read_lowestoft2 <- function(file, format="long", value.name="x",sep = "", quiet 
 #' "wide" or "list"
 #' but can also use "list" which returns a list of matrices.
 #' @param quiet boolean, default is TRUE
+#' @param ... other arguements
 
 
-read_lowestoft <- function(file, sep = "", format = "long", quiet=TRUE) {
+read_lowestoft <- function(file, sep = "", format = "long", quiet=TRUE, ...) {
 
   if (!file.exists(file)){
     if(quiet!=TRUE) message(paste("VPA index file", file, "does not exist"))
@@ -131,7 +132,10 @@ read_lowestoft <- function(file, sep = "", format = "long", quiet=TRUE) {
   # figure out if this is an index file or a single object file
   #  if the latter pass this directly to read_lowestoft2
 
+
+
   files. <- scan(file, what = "character", skip = 2, sep = sep, quiet=quiet)
+
   for(i in seq(length(files.)))
     if (!grepl(dir,files.[i]))
       files.[i] <- file.path(dir, files.[i], fsep = .Platform$file.sep)
