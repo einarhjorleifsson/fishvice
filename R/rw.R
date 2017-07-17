@@ -29,16 +29,16 @@ get_file <- function(URL,File)
 #' @param retroY The retrospective year
 #' @return A list with \code{data.frame} rby, rbya and rba
 #' @seealso \code{\link{read_separ}} for reading separate model output and \code{\link{read_adapt}} for reading adapt model output
-read_adcam <- function (path,run,rName=NA,mName=NA,calcSurBio=T,ggFactor=F,Scale=1e3,assYear=NA,retroY=NA) {
+read_adcam <- function (path,run,rName=NA,mName=NA,calcSurBio=T,ggFactor=F,Scale=1e3,assYear=NA,retroY=NA,na.strings=c("-1")) {
   cnRby <- c("year","r","n3","n6","bioF","bio","bio1","ssb","ssb2","fbar","hr",
-    "oY","pY","oU1","pU1","oU2","pU2","run","model")
+    "oY","pY","oU1","pU1","oU2","pU2","oU3","pU3","oU4","pU4","run","model")
   cnRbya <- c("year","age","oC","cW","sW","ssbW","mat","n","z","f","m",
-    "pC","rC","oU1","pU1","rU1","oU2","pU2","rU2")
-  cnRba <- c("age","sel","pSel","sigma","cvU1","qU1","pU1","cvU2","qU2","pU2","run","model")
+    "pC","rC","oU1","pU1","rU1","oU2","pU2","rU2","oU3","pU3","rU3","oU4","pU4","rU4")
+  cnRba <- c("age","sel","pSel","sigma","cvU1","qU1","pU1","cvU2","qU2","pU2","cvU3","qU3","pU3","cvU4","qU4","pU4","run","model")
   # rby
-  if(is.na(retroY)) rby <- read.table(paste(path,run,"resultsbyyear",sep="/"),header=T,na.strings=c("-1","0"))
+  if(is.na(retroY)) rby <- read.table(paste(path,run,"resultsbyyear",sep="/"),header=T,na.strings=na.strings)
   if(!is.na(retroY)) {
-    rby <- read.table(paste(paste(path,run,"resultsbyyear",sep="/"),retroY,sep=""),header=T,na.strings=c("-1","0"))
+    rby <- read.table(paste(paste(path,run,"resultsbyyear",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
   }
   n <- nrow(rby)
   if(ncol(rby)!=21) {
@@ -61,9 +61,9 @@ read_adcam <- function (path,run,rName=NA,mName=NA,calcSurBio=T,ggFactor=F,Scale
   rby$n3 <- rby$n3/Scale
   rby$n6 <- rby$n6/Scale
   # rbyaa
-  if(is.na(retroY)) rbya <- read.table(paste(path,run,"resultsbyyearandage",sep="/"),header=T,na.strings=c("-1","0"))
+  if(is.na(retroY)) rbya <- read.table(paste(path,run,"resultsbyyearandage",sep="/"),header=T,na.strings=na.strings)
   if(!is.na(retroY)) {
-    rbya <- read.table(paste(paste(path,run,"resultsbyyearandage",sep="/"),retroY,sep=""),header=T,na.strings=c("-1","0"))
+    rbya <- read.table(paste(paste(path,run,"resultsbyyearandage",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
   }
   n <- nrow(rbya)
   if(ncol(rbya)<18) {
@@ -87,9 +87,9 @@ read_adcam <- function (path,run,rName=NA,mName=NA,calcSurBio=T,ggFactor=F,Scale
   rbya$n  <- rbya$n/Scale
   rbya$pC <- rbya$pC/Scale
   # rba
-  if(is.na(retroY)) rba <- read.table(paste(path,run,"resultsbyage",sep="/"),header=T,na.strings=c("-1","0"))
+  if(is.na(retroY)) rba <- read.table(paste(path,run,"resultsbyage",sep="/"),header=T,na.strings=na.strings)
   if(!is.na(retroY)) {
-    rba <- read.table(paste(paste(path,run,"resultsbyage",sep="/"),retroY,sep=""),header=T,na.strings=c("-1","0"))
+    rba <- read.table(paste(paste(path,run,"resultsbyage",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
   }
   n <- nrow(rba)
   if(ncol(rba)!=11) {
@@ -130,29 +130,33 @@ read_adcam <- function (path,run,rName=NA,mName=NA,calcSurBio=T,ggFactor=F,Scale
 #' @param Scale Convertion of values
 #' @param assYear Assessment year
 #' @param retroY The retrospective year
-#' @return A list with \code{data.frame} rby, rbya and rba
+#' @return A list with \code{data.frame} rby, rbya and rba.
 #' @seealso \code{\link{read_separ}} for reading separate model output and \code{\link{read_adcam}} for reading adcam model output
-read_adapt <- function (path,run,rName=NA,mName=NA,calcSurBio=F,ggFactor=F,Scale=1e3,assYear=NA,retroY=NA) {
+read_adapt <- function (path,run,rName=NA,mName=NA,calcSurBio=F,ggFactor=F,Scale=1e3,assYear=NA,retroY=NA,na.strings="-1") {
 
   cnRby <- c("year","r","n3","n6","bioF","bio","bio1","ssb","ssb2","fbar","hr",
-    "oY","pY","oU1","pU1","oU2","pU2","run","model")
+    "oY","pY","oU1","pU1","oU2","pU2","oU3","pU3","run","model")
   cnRbya <- c("year","age","oC","cW","sW","ssbW","mat","n","z","f","m",
-    "pC","rC","oU1","pU1","rU1","oU2","pU2","rU2")
-  cnRba <- c("age","sel","pSel","sigma","cvU1","qU1","pU1","cvU2","qU2","pU2","run","model")
+    "pC","rC","oU1","pU1","rU1","oU2","pU2","rU2","oU3","pU3","rU3")
+  cnRba <- c("age","sel","pSel","sigma","cvU1","qU1","pU1","cvU2","qU2","pU2","cvU3","qU3","pU3","run","model")
 
   # rby
-  if(is.na(retroY)) rby <- read.table(paste(path,run,"resultsbyyear",sep="/"),header=T,na.strings=c("-1","0"))
+  if(is.na(retroY)) rby <- read.table(paste(path,run,"resultsbyyear",sep="/"),header=T,na.strings=na.strings)
   if(!is.na(retroY)) {
-    rby <- read.table(paste(paste(path,run,"resultsbyyear",sep="/"),retroY,sep=""),header=T,na.strings=c("-1","0"))
+    rby <- read.table(paste(paste(path,run,"resultsbyyear",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
   }
   n <- nrow(rby)
-  if(ncol(rby)!=18) {
-    rby$pU2 <- rep(NA,n)
-    rby$oU2 <- rep(NA,n)
+  if(ncol(rby) < 18) {
+    rby$pU2 <- rby$oU2 <- NA
   }
+  if(ncol(rby) < 20) {
+    rby$pU3 <- rby$oU3 <- NA
+  }
+
+
   names(rby) <- c("year","fbar","pY","oY","ssb","ssb2","bioF","bio1",
     "bio","preR","r","n1","n3","n6","pU1","oU1",
-    "pU2","oU2")
+    "pU2","oU2","pU3","oU3")
   if(ggFactor) rby$r <- rby$r*exp(-0.4)
   rby$hr <- ifelse(!is.na(rby$oY),rby$oY,rby$pY)/rby$bio
   rby$run <- rName
@@ -165,18 +169,19 @@ read_adapt <- function (path,run,rName=NA,mName=NA,calcSurBio=F,ggFactor=F,Scale
 
 
   # rbya
-  if(is.na(retroY)) rbya <- read.table(paste(path,run,"resultsbyyearandage",sep="/"),header=T,na.strings=c("-1","0"))
+  if(is.na(retroY)) rbya <- read.table(paste(path,run,"resultsbyyearandage",sep="/"),header=T,na.strings=na.strings)
   if(!is.na(retroY)) {
-    rbya <- read.table(paste(paste(path,run,"resultsbyyearandage",sep="/"),retroY,sep=""),header=T,na.strings=c("-1","0"))
+    rbya <- read.table(paste(paste(path,run,"resultsbyyearandage",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
   }
   n <- nrow(rby)
-  if(ncol(rbya) != 19) {
-    rbya$pU2 <- NA
-    rbya$oU2 <- NA
-    rbya$rU2  <- NA
+  if(ncol(rbya) < 17) {
+    rbya$pU2 <-rbya$oU2 <- rbya$rU2  <- NA
+  }
+  if(ncol(rbya) < 20) {
+    rbya$pU3 <-rbya$oU3 <- rbya$rU3  <- NA
   }
   names(rbya) <- c("year","age","n","z","sW","m","f","pC","cW","ssbW","mat",
-    "oC","rC","pU1","oU1","rU1","pU2","oU2","rU2")
+    "oC","rC","pU1","oU1","rU1","pU2","oU2","rU2","pU3","oU3","rU3")
   if(ggFactor) rbya$n <- ifelse(rbya$age %in% 1,rbya$n*exp(-0.4),rbya$n)
   if(ggFactor) rbya$n <- ifelse(rbya$age %in% 2,rbya$n*exp(-0.2),rbya$n)
 
@@ -190,17 +195,18 @@ read_adapt <- function (path,run,rName=NA,mName=NA,calcSurBio=F,ggFactor=F,Scale
   rbya$pC <- rbya$pC/Scale
 
   # rba
-  if(is.na(retroY)) rba <- read.table(paste(path,run,"resultsbyage",sep="/"),header=T,na.strings=c("-1","0"))
+  if(is.na(retroY)) rba <- read.table(paste(path,run,"resultsbyage",sep="/"),header=T,na.strings=na.strings)
   if(!is.na(retroY)) {
-    rba <- read.table(paste(paste(path,run,"resultsbyage",sep="/"),retroY,sep=""),header=T,na.strings=c("-1","0"))
+    rba <- read.table(paste(paste(path,run,"resultsbyage",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
   }
   n <- nrow(rba)
-  if(ncol(rba)!=10) {
-    rba$cvU2 <- rep(NA,n)
-    rba$qU2  <- rep(NA,n)
-    rba$pU2  <- rep(NA,n)
+  if(ncol(rba) < 8) {
+    rba$cvU2 <-    rba$qU2  <- rba$pU2  <- NA
   }
-  names(rba) <- c("age","sel","pSel","sigma","cvU1","qU1","pU1","cvU2","qU2","pU2")
+  if(ncol(rba) < 11) {
+    rba$cvU3 <-    rba$qU3  <- rba$pU3  <- NA
+  }
+  names(rba) <- c("age","sel","pSel","sigma","cvU1","qU1","pU1","cvU2","qU2","pU2","cvU3","qU3","pU3")
   rba$run <- rName
   rba$model <- mName
   rba <- rba[,cnRba]
