@@ -28,14 +28,14 @@ read_prelude <- function (file, rownames = FALSE, underscore2dot = FALSE)
     return(NULL)
   }
 
-  fields <- count.fields(file, sep = "\t")
+  fields <- utils::count.fields(file, sep = "\t")
 
   nrec <- length(fields)
   if (nrec == 2) return(NULL)
 
   collab <- scan(file = file, what = character(), sep = "\t",
                  n = fields[1],quiet=TRUE)
-  outp <- read.table(file, sep = "\t", skip = 2, as.is = T,
+  outp <- utils::read.table(file, sep = "\t", skip = 2, as.is = T,
                      row.names = NULL, na.strings = "")
   names(outp) <- collab
   if (rownames) {

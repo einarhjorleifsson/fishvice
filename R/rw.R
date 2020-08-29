@@ -7,7 +7,7 @@
 get_file <- function(URL,File)
 {
   temporaryFile <- tempfile()
-  download.file(paste(URL,File,sep="/"),
+  utils::download.file(paste(URL,File,sep="/"),
                 destfile=temporaryFile,
                 method="curl",quiet = T)
   return(temporaryFile)
@@ -27,18 +27,28 @@ get_file <- function(URL,File)
 #' @param Scale Convertion of values
 #' @param assYear Assessment year
 #' @param retroY The retrospective year
+#' @param na.strings A character vector specifying values to be interpreted as NA
 #' @return A list with \code{data.frame} rby, rbya and rba
 #' @seealso \code{\link{read_separ}} for reading separate model output and \code{\link{read_adapt}} for reading adapt model output
-read_adcam <- function (path,run,rName=NA,mName=NA,calcSurBio=T,ggFactor=F,Scale=1e3,assYear=NA,retroY=NA,na.strings=c("-1")) {
+read_adcam <- function (path,
+                        run,
+                        rName=NA,
+                        mName=NA,
+                        calcSurBio=T,
+                        ggFactor=F,
+                        Scale=1e3,
+                        assYear=NA,
+                        retroY=NA,
+                        na.strings=c("-1")) {
   cnRby <- c("year","r","n3","n6","bioF","bio","bio1","ssb","ssb2","fbar","hr",
     "oY","pY","oU1","pU1","oU2","pU2","oU3","pU3","oU4","pU4","run","model")
   cnRbya <- c("year","age","oC","cW","sW","ssbW","mat","n","z","f","m",
     "pC","rC","oU1","pU1","rU1","oU2","pU2","rU2","oU3","pU3","rU3","oU4","pU4","rU4")
   cnRba <- c("age","sel","pSel","sigma","cvU1","qU1","pU1","cvU2","qU2","pU2","cvU3","qU3","pU3","cvU4","qU4","pU4","run","model")
   # rby
-  if(is.na(retroY)) rby <- read.table(paste(path,run,"resultsbyyear",sep="/"),header=T,na.strings=na.strings)
+  if(is.na(retroY)) rby <- utils::read.table(paste(path,run,"resultsbyyear",sep="/"),header=T,na.strings=na.strings)
   if(!is.na(retroY)) {
-    rby <- read.table(paste(paste(path,run,"resultsbyyear",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
+    rby <- utils::read.table(paste(paste(path,run,"resultsbyyear",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
   }
   n <- nrow(rby)
   if(ncol(rby)!=21) {
@@ -61,9 +71,9 @@ read_adcam <- function (path,run,rName=NA,mName=NA,calcSurBio=T,ggFactor=F,Scale
   rby$n3 <- rby$n3/Scale
   rby$n6 <- rby$n6/Scale
   # rbyaa
-  if(is.na(retroY)) rbya <- read.table(paste(path,run,"resultsbyyearandage",sep="/"),header=T,na.strings=na.strings)
+  if(is.na(retroY)) rbya <- utils::read.table(paste(path,run,"resultsbyyearandage",sep="/"),header=T,na.strings=na.strings)
   if(!is.na(retroY)) {
-    rbya <- read.table(paste(paste(path,run,"resultsbyyearandage",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
+    rbya <- utils::read.table(paste(paste(path,run,"resultsbyyearandage",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
   }
   n <- nrow(rbya)
   if(ncol(rbya)<18) {
@@ -87,9 +97,9 @@ read_adcam <- function (path,run,rName=NA,mName=NA,calcSurBio=T,ggFactor=F,Scale
   rbya$n  <- rbya$n/Scale
   rbya$pC <- rbya$pC/Scale
   # rba
-  if(is.na(retroY)) rba <- read.table(paste(path,run,"resultsbyage",sep="/"),header=T,na.strings=na.strings)
+  if(is.na(retroY)) rba <- utils::read.table(paste(path,run,"resultsbyage",sep="/"),header=T,na.strings=na.strings)
   if(!is.na(retroY)) {
-    rba <- read.table(paste(paste(path,run,"resultsbyage",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
+    rba <- utils::read.table(paste(paste(path,run,"resultsbyage",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
   }
   n <- nrow(rba)
   if(ncol(rba)!=11) {
@@ -130,6 +140,8 @@ read_adcam <- function (path,run,rName=NA,mName=NA,calcSurBio=T,ggFactor=F,Scale
 #' @param Scale Convertion of values
 #' @param assYear Assessment year
 #' @param retroY The retrospective year
+#' @param na.strings A character vector specifying values to be interpreted as NA
+#'
 #' @return A list with \code{data.frame} rby, rbya and rba.
 #' @seealso \code{\link{read_separ}} for reading separate model output and \code{\link{read_adcam}} for reading adcam model output
 read_adapt <- function (path,run,rName=NA,mName=NA,calcSurBio=F,ggFactor=F,Scale=1e3,assYear=NA,retroY=NA,na.strings="-1") {
@@ -141,9 +153,9 @@ read_adapt <- function (path,run,rName=NA,mName=NA,calcSurBio=F,ggFactor=F,Scale
   cnRba <- c("age","sel","pSel","sigma","cvU1","qU1","pU1","cvU2","qU2","pU2","cvU3","qU3","pU3","run","model")
 
   # rby
-  if(is.na(retroY)) rby <- read.table(paste(path,run,"resultsbyyear",sep="/"),header=T,na.strings=na.strings)
+  if(is.na(retroY)) rby <- utils::read.table(paste(path,run,"resultsbyyear",sep="/"),header=T,na.strings=na.strings)
   if(!is.na(retroY)) {
-    rby <- read.table(paste(paste(path,run,"resultsbyyear",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
+    rby <- utils::read.table(paste(paste(path,run,"resultsbyyear",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
   }
   n <- nrow(rby)
   if(ncol(rby) < 18) {
@@ -169,9 +181,9 @@ read_adapt <- function (path,run,rName=NA,mName=NA,calcSurBio=F,ggFactor=F,Scale
 
 
   # rbya
-  if(is.na(retroY)) rbya <- read.table(paste(path,run,"resultsbyyearandage",sep="/"),header=T,na.strings=na.strings)
+  if(is.na(retroY)) rbya <- utils::read.table(paste(path,run,"resultsbyyearandage",sep="/"),header=T,na.strings=na.strings)
   if(!is.na(retroY)) {
-    rbya <- read.table(paste(paste(path,run,"resultsbyyearandage",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
+    rbya <- utils::read.table(paste(paste(path,run,"resultsbyyearandage",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
   }
   n <- nrow(rby)
   if(ncol(rbya) < 17) {
@@ -195,9 +207,9 @@ read_adapt <- function (path,run,rName=NA,mName=NA,calcSurBio=F,ggFactor=F,Scale
   rbya$pC <- rbya$pC/Scale
 
   # rba
-  if(is.na(retroY)) rba <- read.table(paste(path,run,"resultsbyage",sep="/"),header=T,na.strings=na.strings)
+  if(is.na(retroY)) rba <- utils::read.table(paste(path,run,"resultsbyage",sep="/"),header=T,na.strings=na.strings)
   if(!is.na(retroY)) {
-    rba <- read.table(paste(paste(path,run,"resultsbyage",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
+    rba <- utils::read.table(paste(paste(path,run,"resultsbyage",sep="/"),retroY,sep=""),header=T,na.strings=na.strings)
   }
   n <- nrow(rba)
   if(ncol(rba) < 8) {
@@ -238,6 +250,8 @@ read_adapt <- function (path,run,rName=NA,mName=NA,calcSurBio=F,ggFactor=F,Scale
 #' @param Scale Convertion of values
 #' @param assYear Assessment year
 #' @param retroY The retrospective year
+#' @param na.strings A character vector specifying values to be interpreted as NA
+#'
 #' @return A list with \code{data.frame} rby, rbya and rba
 #' @note If file exist it is simply overwritten without any warning
 #' @seealso \code{\link{read_adcam}} for reading adcam model output and \code{\link{read_adapt}} for reading adapt model output

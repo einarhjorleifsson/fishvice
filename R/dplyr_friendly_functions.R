@@ -7,7 +7,7 @@
 #' @param . No argument needed
 
 to_lower <- function(.) {
-  setNames(., nm = tolower(names(.)))
+  stats::setNames(., nm = tolower(names(.)))
 }
 
 #' @title Returns the lon for a statistical square (tilkynningaskildureitur)

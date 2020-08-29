@@ -35,6 +35,8 @@ read_separ(
 \item{assYear}{Assessment year}
 
 \item{retroY}{The retrospective year}
+
+\item{na.strings}{A character vector specifying values to be interpreted as NA}
 }
 \value{
 A list with \code{data.frame} rby, rbya and rba

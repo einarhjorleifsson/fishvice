@@ -30,7 +30,7 @@ read_hst <- function (file, dir, txt, startyear, names, negative.allowed = FALSE
   on.exit(unlink(tmpskra))
   tmp <- scan(file, what = character(), sep = "\n")
   tmp1 <- matrix(tmp, length(tmp), 1)
-  write.table(tmp1, file = tmpskra, sep = "", col.names = F,
+  utils::write.table(tmp1, file = tmpskra, sep = "", col.names = F,
               row.names = F, quote = F)
   i <- grep(txt, tmp)
   j <- grep("#", tmp)
@@ -83,7 +83,7 @@ getlineswin <- function (file, line1, line2) {
   x <- scan(file, sep = "\t", what = character())
   x <- matrix(x, length(x), 1)
   x <- x[line1:line2, ]
-  write.table(x, file = tmpskra, sep = "\n", col.names = F,
+  utils::write.table(x, file = tmpskra, sep = "\n", col.names = F,
               row.names = F, quote = F)
-  return(read.table(tmpskra))
+  return(utils::read.table(tmpskra))
 }

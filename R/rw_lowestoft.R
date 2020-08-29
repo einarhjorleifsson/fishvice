@@ -22,7 +22,7 @@ read_lowestoft2 <- function(file, format="long", value.name="x",sep = "", quiet 
   }
 
   switch (as.character(file.access(file)),
-          "0" = info <- read.table(file, colClasses = "character",
+          "0" = info <- utils::read.table(file, colClasses = "character",
                                    header = FALSE, fill = TRUE, skip = 1,
                                    nrows = 4, sep = sep, comment.char='#'),
           "-1" = info <- matrix(rep("0", 8), nrow = 4, ncol = 2))
@@ -70,7 +70,7 @@ read_lowestoft2 <- function(file, format="long", value.name="x",sep = "", quiet 
                                    dimnames = dms),
                 "5" = {
                   dms <- list(year=as.character(yrs[1]:yrs[2]))
-                  res <- matrix(t(read.table(file = file,
+                  res <- matrix(t(utils::read.table(file = file,
                                             skip = 5,
                                             nrows = nyrs,
                                             sep = sep)[,1]),
@@ -299,7 +299,7 @@ read_lowestoft_survey <- function(filename, format="data.frame")
     idx[[k]]$a1 <- temp[1]
     idx[[k]]$a2 <- temp[2]
     idx[[k]]$na <- temp[2] - temp[1] + 1
-    idx[[k]]$tab <- read.table(filename, skip = start + 3, nrows = idx[[k]]$ny)
+    idx[[k]]$tab <- utils::read.table(filename, skip = start + 3, nrows = idx[[k]]$ny)
     temp <- idx[[k]]$tab[,2:(idx[[k]]$na + 1)]
     effort <- idx[[k]]$tab[,1]
     idx[[k]]$tab <- data.frame(temp / effort)

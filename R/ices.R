@@ -80,10 +80,10 @@ ices_standard_graph <- function(rby,graph_name) {
 
   my_height <- 8
   goldenRatio <- (1+sqrt(5))/2
-  if(!missing(graph_name)) pdf(paste0(graph_name,".pdf"),height=my_height,width=goldenRatio*my_height)
+  if(!missing(graph_name)) grDevices::pdf(paste0(graph_name,".pdf"),height=my_height,width=goldenRatio*my_height)
   gridExtra::grid.arrange(yield, rec, mort, bio, ncol=2)
   if(!missing(graph_name)) {
-    dev.off()
+    grDevices::dev.off()
     system(paste0("convert -density 200x200 ",graph_name,".pdf ",graph_name,".png"))
   }
 }
