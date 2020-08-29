@@ -14,4 +14,3 @@ ices_standard_graph(rby, graph_name)
 \description{
 XXX
 }
-

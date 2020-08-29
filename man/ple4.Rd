@@ -4,7 +4,9 @@
 \name{ple4}
 \alias{ple4}
 \title{ple4}
-\format{An object of class \code{FLStock} of length 1.}
+\format{
+An object of class \code{FLStock} of dimension 10 x 58 x 1 x 1 x 1 x 1.
+}
 \usage{
 ple4
 }
@@ -15,4 +17,3 @@ Example file: North Sea Place 2015 assessment results
 David Miller <david.miller@wur.nl>
 }
 \keyword{datasets}
-

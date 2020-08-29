@@ -14,4 +14,3 @@ sys_find_text(string, dir)
 \description{
 XXX
 }
-

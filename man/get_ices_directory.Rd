@@ -20,4 +20,3 @@ So use at your own discretion!
 
 Still only function for some directories
 }
-

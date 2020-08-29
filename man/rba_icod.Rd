@@ -4,7 +4,9 @@
 \name{rba_icod}
 \alias{rba_icod}
 \title{Results by age}
-\format{An object of class \code{data.frame} with 12 rows and 12 columns.}
+\format{
+An object of class \code{data.frame} with 12 rows and 12 columns.
+}
 \usage{
 rba_icod
 }
@@ -15,4 +17,3 @@ Example file: Cod results by age
 Einar Hjorleifsson <einar.hjorleifsson@gmail.com>
 }
 \keyword{datasets}
-

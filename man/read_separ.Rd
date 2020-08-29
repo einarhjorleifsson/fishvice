@@ -4,8 +4,18 @@
 \alias{read_separ}
 \title{Reads 'separable' assessment results}
 \usage{
-read_separ(path, run, rName = NA, mName = NA, calcSurBio = F,
-  ggFactor = F, Scale = 1000, assYear = NA, retroY = NA)
+read_separ(
+  path,
+  run,
+  rName = NA,
+  mName = NA,
+  calcSurBio = F,
+  ggFactor = F,
+  Scale = 1000,
+  assYear = NA,
+  retroY = NA,
+  na.strings = "-1"
+)
 }
 \arguments{
 \item{path}{Path to the runs, here the 'root' path to the runs.}
@@ -38,4 +48,3 @@ If file exist it is simply overwritten without any warning
 \seealso{
 \code{\link{read_adcam}} for reading adcam model output and \code{\link{read_adapt}} for reading adapt model output
 }
-

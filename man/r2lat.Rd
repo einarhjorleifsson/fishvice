@@ -13,4 +13,3 @@ r2lat(x)
 A dplyr-friendly variant of the geo::r2d, returning only a
 vector of latitudes. To be used inside mutate.
 }
-

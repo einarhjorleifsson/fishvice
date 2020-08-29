@@ -16,4 +16,3 @@ sam_process_error(rbya, plus_group = TRUE, plot_it = FALSE)
 \description{
 XXX
 }
-

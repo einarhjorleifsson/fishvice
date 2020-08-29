@@ -13,4 +13,3 @@ flindices_to_rbya(x)
 The rbya (results by year and age) is a long \code{data.frame}
 popular in Reykjavik
 }
-

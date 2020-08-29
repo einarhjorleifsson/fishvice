@@ -12,4 +12,3 @@ str_strip_text(string)
 \description{
 Function strips all alphabetic characters (a-z and A-Z) from a string
 }
-

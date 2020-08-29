@@ -56,7 +56,7 @@ sam_process_error <- function(rbya, plus_group=TRUE, plot_it=FALSE) {
       ggplot2::facet_wrap(~ age, scale="free_y") +
       ggplot2::labs(x="", y="",title="Process error expressed as deviations in number of fish")
 
-    mass <- ggplot2::ggplot(x, aes(year, b)) +
+    mass <- ggplot2::ggplot(x, ggplot2::aes(year, b)) +
       ggplot2::theme_bw() +
       ggplot2::geom_bar(stat="identity") +
       ggplot2::labs(x="",y="Mass",title="Process error expressed as deviation in mass")

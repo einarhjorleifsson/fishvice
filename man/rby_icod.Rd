@@ -4,15 +4,16 @@
 \name{rby_icod}
 \alias{rby_icod}
 \title{Results by year}
-\format{An object of class \code{data.frame} with 61 rows and 5 columns.}
+\format{
+An object of class \code{data.frame} with 61 rows and 5 columns.
+}
 \usage{
 rby_icod
 }
 \description{
-Example file: Cod results by year.
+Example file: Cod results by year
 }
 \author{
 Einar Hjorleifsson <einar.hjorleifsson@gmail.com>
 }
 \keyword{datasets}
-

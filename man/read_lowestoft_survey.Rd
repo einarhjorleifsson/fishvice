@@ -15,4 +15,3 @@ otherwise a list.}
 \description{
 Reads in survey data in the Lowestoft format.
 }
-

@@ -101,7 +101,7 @@ read_lowestoft2 <- function(file, format="long", value.name="x",sep = "", quiet 
     res <- reshape2::melt(res,"year",variable.name="age",value.name = value.name)
     res$age <- as.integer(as.character(res$age))
     res[,3] <- as.numeric(res[,3])
-  return(dplyr::as_data_frame(res))
+  return(tibble::as_data_frame(res))
   }
 }
 
@@ -265,7 +265,7 @@ read_lowestoft <- function(file, sep = "", format = "long", quiet=TRUE, ...) {
 
   if(format == "long") {
     res <- bya[order(bya$year),] %>%
-      dplyr::as_data_frame()
+      tibble::as_data_frame()
   }
 
   return(res)
@@ -325,7 +325,7 @@ read_lowestoft_survey <- function(filename, format="data.frame")
     }
     res <- tmp
     res$age <- as.integer(as.character(res$age))
-    res <- dplyr::as_data_frame(res)
+    res <- tibble::as_data_frame(res)
 
   }
 

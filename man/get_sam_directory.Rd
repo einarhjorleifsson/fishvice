@@ -15,4 +15,3 @@ get_sam_directory(assessment, user = "user3")
 The function copies the whole directory of an assessment run from
 stockassessment.org to a local directory
 }
-

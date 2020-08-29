@@ -22,4 +22,3 @@ Only used if project is TRUE.}
 The rbya (results by year and age) is a long \code{data.frame}
 popular in Reykjavik
 }
-

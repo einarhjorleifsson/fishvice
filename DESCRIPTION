@@ -1,15 +1,17 @@
 Package: fishvice
 Type: Package
 Title: A collection of various personal functions used in stock assessment
-Version: 0.0.4.9001
-Date: 2016-03-08
+Version: 0.1.0
+Date: 2020-08-29
 Authors@R: person("Einar", "Hjorleifsson", email = "einarhjorleifsson@gmail.com",
   role = c("aut", "cre"))
 Description: Miscalaneous personal functions.
+Encoding: UTF-8
 Depends:
-    R (>= 3.1.0)
+    R (>= 3.6.0)
 Imports:
     dplyr,
+    FLCore,
     ggplot2,
     grid,
     gridExtra,
@@ -18,7 +20,9 @@ Imports:
     purrr,
     RCurl,
     reshape2,
+    stockassessment,
     stringr,
+    tibble,
     tidyr
 License: GPL (>= 2)
 LazyData: TRUE
@@ -27,4 +31,4 @@ BugReports: http://github.com/einarhjorleifsson/fishvice/issues
 Suggests:
     knitr
 VignetteBuilder: knitr
-RoxygenNote: 5.0.1
+RoxygenNote: 7.1.1

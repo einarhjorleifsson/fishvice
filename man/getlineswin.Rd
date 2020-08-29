@@ -19,4 +19,3 @@ A xxx
 \description{
 Some longer text here
 }
-

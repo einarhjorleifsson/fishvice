@@ -25,10 +25,9 @@ containing dashse.
 
 Based on script in the geo-package, there called s2pre.
 }
-\author{
-hoski@hafro.is
-}
 \seealso{
 \code{\link{write_prelude}} for writing prelude files
 }
-
+\author{
+hoski@hafro.is
+}

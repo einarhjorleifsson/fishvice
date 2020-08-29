@@ -20,4 +20,3 @@ Returns a numerical value (AphiaID):
 \description{
 Connection to WoRMS webservice \href{http://marinespecies.org/aphia.php?p=soap}{getAphiaID}.
 }
-

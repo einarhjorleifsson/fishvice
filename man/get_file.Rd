@@ -14,4 +14,3 @@ get_file(URL, File)
 \description{
 Gets a file from the web.
 }
-

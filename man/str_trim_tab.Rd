@@ -15,4 +15,3 @@ str_trim_tab(string, side = "both")
 Function is inspired by str_trim function in the stringr package.
 The str_trim function is for trimming whitespace, here tabs are trimmed.
 }
-

@@ -37,7 +37,7 @@ str_strip_nondigits <- function(string, out.numeric = TRUE) {
 #' @param side side on which character string is removed (left, right or both)
 
 str_trim_tab <- function(string,side='both') {
-  string <- stringr:::check_string(string)
+  #string <- stringr:::check_string(string)
   stopifnot(length(side) == 1)
   side <- match.arg(side, c("left", "right", "both"))
   pattern <- switch(side, left = "^\\t+", right = "\\t+$",
@@ -53,7 +53,7 @@ str_trim_tab <- function(string,side='both') {
 #' @export
 
 str_trim_commas <- function(string,side='both') {
-  string <- stringr:::check_string(string)
+  #string <- stringr:::check_string(string)
   stopifnot(length(side) == 1)
   side <- match.arg(side, c("left", "right", "both"))
   pattern <- switch(side, left = "^,+", right = ",+$",

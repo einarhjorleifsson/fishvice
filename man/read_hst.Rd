@@ -38,4 +38,3 @@ posterior probabilities is reported. Plotting the first column
 probabilities) on the y-axis can be a convenient way to make a visualization
 of the posterior probability distribution.
 }
-

@@ -21,10 +21,9 @@ in
 \note{
 If file exist it is simply overwritten without any warning
 }
-\author{
-hoski@hafro.is
-}
 \seealso{
 \code{\link{read_prelude}} for reading prelude files
 }
-
+\author{
+hoski@hafro.is
+}

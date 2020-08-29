@@ -13,4 +13,3 @@ r2lon(x)
 A dplyr-friendly variant of the geo::r2d, returning only a
 vector of longitudes. To be used inside mutate.
 }
-

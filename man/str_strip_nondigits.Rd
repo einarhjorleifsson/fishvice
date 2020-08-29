@@ -15,4 +15,3 @@ str_strip_nondigits(string, out.numeric = TRUE)
 Function strips all alphabetic and "special" characters from a string.
 Ergo, only digits 0-9 and the decimal (".") is returned.
 }
-

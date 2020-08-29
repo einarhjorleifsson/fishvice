@@ -12,4 +12,3 @@ to_lower(.)
 \description{
 A pipe friendly function
 }
-

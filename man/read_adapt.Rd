@@ -4,8 +4,18 @@
 \alias{read_adapt}
 \title{Reads 'adapt' assessment results}
 \usage{
-read_adapt(path, run, rName = NA, mName = NA, calcSurBio = F,
-  ggFactor = F, Scale = 1000, assYear = NA, retroY = NA)
+read_adapt(
+  path,
+  run,
+  rName = NA,
+  mName = NA,
+  calcSurBio = F,
+  ggFactor = F,
+  Scale = 1000,
+  assYear = NA,
+  retroY = NA,
+  na.strings = "-1"
+)
 }
 \arguments{
 \item{path}{Path to the runs, here the 'root' path to the runs.}
@@ -27,7 +37,7 @@ read_adapt(path, run, rName = NA, mName = NA, calcSurBio = F,
 \item{retroY}{The retrospective year}
 }
 \value{
-A list with \code{data.frame} rby, rbya and rba
+A list with \code{data.frame} rby, rbya and rba.
 }
 \description{
 Some longer text here
@@ -35,4 +45,3 @@ Some longer text here
 \seealso{
 \code{\link{read_separ}} for reading separate model output and \code{\link{read_adcam}} for reading adcam model output
 }
-

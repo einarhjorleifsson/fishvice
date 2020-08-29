@@ -4,8 +4,18 @@
 \alias{read_adcam}
 \title{Reads 'adcam' assessment results}
 \usage{
-read_adcam(path, run, rName = NA, mName = NA, calcSurBio = T,
-  ggFactor = F, Scale = 1000, assYear = NA, retroY = NA)
+read_adcam(
+  path,
+  run,
+  rName = NA,
+  mName = NA,
+  calcSurBio = T,
+  ggFactor = F,
+  Scale = 1000,
+  assYear = NA,
+  retroY = NA,
+  na.strings = c("-1")
+)
 }
 \arguments{
 \item{path}{Path to the runs, here the 'root' path to the runs.}
@@ -35,4 +45,3 @@ Some longer text here
 \seealso{
 \code{\link{read_separ}} for reading separate model output and \code{\link{read_adapt}} for reading adapt model output
 }
-

@@ -14,4 +14,3 @@ str_trim_commas(string, side = "both")
 \description{
 Function is enspired by str_trim function in the stringr package.
 }
-
