@@ -13,7 +13,7 @@ sam_rbya(fit, ibya)
 }
 \value{
 A tibble, containing at minimum:
-#' \itemize{
+\itemize{
   \item year:
   \item age:
   \item n: stock in numbers
