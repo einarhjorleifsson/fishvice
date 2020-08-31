@@ -4,14 +4,14 @@
 \alias{sam_ibya}
 \title{sam_ibya}
 \usage{
-sam_ibya(path)
+sam_ibya(fit)
 }
 \arguments{
-\item{path}{The path to the directory, should end with ../data}
+\item{fit}{A "sam"-object}
 }
 \value{
 A tibble containing the following variables:
-#' \itemize{
+\itemize{
   \item year:
   \item age:
   \item cW: Catch weights
@@ -29,7 +29,5 @@ A tibble containing the following variables:
 }
 }
 \description{
-Reads in (Lowestoft) input data as setup in stockassessment.org.
-Normally this function is called once the whole "run" directory has been
-downloaded from stockassessement.org (using  e.g. fishvice::get_sam_directory
+sam input data as a tibble
 }

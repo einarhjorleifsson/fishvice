@@ -3,13 +3,11 @@
 #' @description The function copies the whole directory of an assessment run from
 #' stockassessment.org to a local directory
 #'
-#' @export
-#'
 #' @param assessment Name of the assessment
-#' @param user Name of the user
+#' @param user Name of the user (default "user3")
 #'
 
-get_sam_directory <- function(assessment, user="user3") {
+sam_get_directory <- function(assessment, user = "user3") {
 
   path <- paste("https://www.stockassessment.org/datadisk/stockassessment/userdirs",user,assessment,sep="/")
   cmd <- paste0("wget --recursive --reject=png,html --level=0 --no-parent ",path,"/")
@@ -24,16 +22,114 @@ get_sam_directory <- function(assessment, user="user3") {
 
 }
 
+
+#' sam_get_fit
+#'
+#' @param assessment Name of run on stockassessment.org
+#'
+#' @return A "sam"-object
+#'
+#' @export
+sam_get_fit <- function(assessment) {
+
+  stockassessment::fitfromweb(assessment, character.only = TRUE)
+
+}
+
+#' sam_get_data
+#'
+#' @param assessment Name of run on stockassessment.org
+#'
+#' @return A list
+#'
+sam_get_data <- function(assessment) {
+
+  dat <- NA
+  load(url(sub("SN", assessment, "https://stockassessment.org/datadisk/stockassessment/userdirs/user3/SN/run/data.RData")))
+  return(dat)
+
+}
+
+#' sam_get_residuals
+#'
+#' @param assessment Name of run on stockassessment.org
+#'
+#' @return XXXX
+sam_get_residuals <- function(assessment) {
+
+  dat <- NA
+  load(url(sub("SN", assessment, "https://stockassessment.org/datadisk/stockassessment/userdirs/user3/SN/run/residuals.RData")))
+  return(dat)
+
+}
+
+#' sam_get_retro
+#'
+#' @param assessment Name of run on stockassessment.org
+#'
+#' @return XXXX
+sam_get_retro <- function(assessment) {
+
+  RETRO <- NA
+  load(url(sub("SN", assessment, "https://stockassessment.org/datadisk/stockassessment/userdirs/user3/SN/run/retro.RData")))
+  return(RETRO)
+
+}
+
+#' sam_ibya_fromsam
+#'
+#' @param fit An object of class sam (often named fit by users)
+#'
+#' @return A tibble
+
+sam_ibya_fromsam <- function(fit) {
+
+  if(class(fit)[[1]] != "sam")
+    stop('Object has to be of class "sam"')
+
+  lh <- function(x, cn) {
+    x %>%
+      as.data.frame() %>%
+      dplyr::mutate(year = row.names(.) %>% as.integer()) %>%
+      tidyr::gather(age, {{cn}}, -year, convert = TRUE) %>%
+      tibble::as_tibble()
+  }
+
+  data <- fit$data
+
+  obs <-
+    data$aux %>%
+    as.data.frame() %>%
+    tibble::as_tibble() %>%
+    dplyr::mutate(obs = exp(data$logobs))
+
+  d <-
+    obs %>%
+    dplyr::filter(fleet == 1) %>%
+    dplyr::select(year, age, oC = obs) %>%
+    dplyr::full_join(lh(data$catchMeanWeight, cW), by = c("year", "age")) %>%
+    dplyr::full_join(lh(data$disMeanWeight, dW), by = c("year", "age")) %>%
+    dplyr::full_join(lh(data$landFrac, lF), by = c("year", "age")) %>%
+    dplyr::full_join(lh(data$landMeanWeight, lW), by = c("year", "age")) %>%
+    dplyr::full_join(lh(data$propMat, mat), by = c("year", "age")) %>%
+    dplyr::full_join(lh(data$natMor, m), by = c("year", "age")) %>%
+    dplyr::full_join(lh(data$propF, pF), by = c("year", "age")) %>%
+    dplyr::full_join(lh(data$propM, pM), by = c("year", "age")) %>%
+    dplyr::full_join(lh(data$stockMeanWeight, sW), by = c("year", "age"))
+
+  return(d)
+
+}
+
+
 #' @title sam_ibya
 #'
-#' @description Reads in (Lowestoft) input data as setup in stockassessment.org.
-#' Normally this function is called once the whole "run" directory has been
-#' downloaded from stockassessement.org (using  e.g. fishvice::get_sam_directory
+#' @description sam input data as a tibble
 #'
-#' @param path The path to the directory, should end with ../data
+#' @param fit A "sam"-object
 #'
 #' @return A tibble containing the following variables:
-#' #' \itemize{
+#' \itemize{
 #'   \item year:
 #'   \item age:
 #'   \item cW: Catch weights
@@ -52,48 +148,67 @@ get_sam_directory <- function(assessment, user="user3") {
 #'
 #' @export
 #'
-sam_ibya <- function(path) {
+#'
 
-  files <- c("cn.dat", "cw.dat", "dw.dat", "lf.dat", "lw.dat",
-             "mo.dat", "nm.dat", "pf.dat", "pm.dat", "sw.dat")
-  var <- c("oC", "cW", "dW", "lF", "lW",
-           "mat", "m", "pF", "pM", "sW")
-  res <- list()
+sam_ibya <- function(fit) {
 
-  for(i in 1:length(files)) {
-
-    res[[i]] <-
-      stockassessment::read.ices(paste0(path, "/", files[i])) %>%
-      as.data.frame() %>%
-      dplyr::mutate(year = row.names(.) %>% as.integer()) %>%
-      tidyr::gather(age, value, -year, convert = TRUE) %>%
-      dplyr::mutate(variable = var[i]) %>%
-      tibble::as_tibble()
+  if(class(fit)[[1]] == "sam") {
+    return(sam_ibya_fromsam(fit))
   }
 
-
-  x <- stockassessment::read.ices(paste0(path, "/", "survey.dat"))
-  sur <- list()
-  for(i in 1:length(x)) {
-    sur[[i]] <-
-      x[[i]] %>%
-      as.data.frame() %>%
-      dplyr::mutate(year = row.names(.) %>% as.integer()) %>%
-      tidyr::gather(age, value, -year, convert = TRUE) %>%
-      dplyr::mutate(variable = paste0("oU", i)) %>%
-      tibble::as_tibble()
-  }
-
-  sur <-
-    sur %>%
-    dplyr::bind_rows()
-
-  res %>%
-    dplyr::bind_rows() %>%
-    dplyr::bind_rows(sur) %>%
-    tidyr::spread(variable, value) %>%
-    tibble::as_tibble() %>%
-    return()
+  # # Older code, reading stuff from text-files
+  # fit <- stockassessment::fitfromweb(assessment, character.only = TRUE)
+  #
+  # if(fromweb) {
+  #   assessment <-
+  #     file.path("https://www.stockassessment.org/datadisk/stockassessment/userdirs",
+  #               user,
+  #               assessment,
+  #               "data")
+  # } else {
+  #   assessment <- file.path(assessment, "data")
+  # }
+  #
+  # files <- c("cn.dat", "cw.dat", "dw.dat", "lf.dat", "lw.dat",
+  #            "mo.dat", "nm.dat", "pf.dat", "pm.dat", "sw.dat")
+  # var <- c("oC", "cW", "dW", "lF", "lW",
+  #          "mat", "m", "pF", "pM", "sW")
+  # res <- list()
+  #
+  # for(i in 1:length(files)) {
+  #
+  #   res[[i]] <-
+  #     stockassessment::read.ices(paste0(assessment, "/", files[i])) %>%
+  #     as.data.frame() %>%
+  #     dplyr::mutate(year = row.names(.) %>% as.integer()) %>%
+  #     tidyr::gather(age, value, -year, convert = TRUE) %>%
+  #     dplyr::mutate(variable = var[i]) %>%
+  #     tibble::as_tibble()
+  # }
+  #
+  #
+  # x <- stockassessment::read.ices(paste0(path, "/", "survey.dat"))
+  # sur <- list()
+  # for(i in 1:length(x)) {
+  #   sur[[i]] <-
+  #     x[[i]] %>%
+  #     as.data.frame() %>%
+  #     dplyr::mutate(year = row.names(.) %>% as.integer()) %>%
+  #     tidyr::gather(age, value, -year, convert = TRUE) %>%
+  #     dplyr::mutate(variable = paste0("oU", i)) %>%
+  #     tibble::as_tibble()
+  # }
+  #
+  # sur <-
+  #   sur %>%
+  #   dplyr::bind_rows()
+  #
+  # res %>%
+  #   dplyr::bind_rows() %>%
+  #   dplyr::bind_rows(sur) %>%
+  #   tidyr::spread(variable, value) %>%
+  #   tibble::as_tibble() %>%
+  #   return()
 
 }
 
@@ -109,7 +224,7 @@ sam_ibya <- function(path) {
 #' @param ibya A tibble containing input data by year and age
 #'
 #' @return A tibble, containing at minimum:
-#' #' \itemize{
+#' \itemize{
 #'   \item year:
 #'   \item age:
 #'   \item n: stock in numbers
@@ -145,69 +260,57 @@ sam_rbya <- function(fit, ibya) {
 
 }
 
-sam_rby <- function(fit, ibya) {
+#' sam_rby
+#'
+#' @description Get assessment summary data from "sam"-object
+#'
+#' @param fit XXX
+#'
+#' @return A tibble containing the following variables:
+#' \itemize{
+#'   \item year:
+#'   \item est: Medium value
+#'   \item low: Lower 2.5% quantile??
+#'   \item high: Upper 2.5% quantile??
+#'   \item variable: Name of variable (catch, recruitment, ssb, tsb and fbar)
+#' }
+#' @export
+#'
+sam_rby <- function(fit) {
 
-  pY <-
-    stockassessment::catchtable(fit) %>%
-    as.data.frame() %>%
-    dplyr::mutate(year = rownames(.) %>% as.integer(),
-           variable = "catch")
-  rec <-
-    stockassessment::rectable(fit) %>%
-    as.data.frame() %>%
-    dplyr::mutate(year = rownames(.) %>% as.integer(),
-           variable = "rec")
-  ssb <-
-    stockassessment::ssbtable(fit) %>%
-    as.data.frame() %>%
-    dplyr::mutate(year = rownames(.) %>% as.integer(),
-           variable = "ssb")
-  tsb <-
-    stockassessment::tsbtable(fit) %>%
-    as.data.frame() %>%
-    dplyr::mutate(year = rownames(.) %>% as.integer(),
-           variable = "tsb")
-  fbar <-
-    stockassessment::fbartable(fit) %>%
-    as.data.frame() %>%
-    dplyr::mutate(year = rownames(.) %>% as.integer(),
-           variable = "fbar")
-
-  if(missing(ibya)) {
-    pY %>%
-      dplyr::bind_rows(rec) %>%
-      dplyr::bind_rows(ssb) %>%
-      dplyr::bind_rows(tsb) %>%
-      dplyr::bind_rows(fbar) %>%
-      tibble::as_tibble() %>%
-      return()
-  } else {
-    bio <-
-      sam_rbya(fit) %>%
-      dplyr::filter(age %in% 4:14) %>%
-      dplyr::left_join(ibya %>%
-                  dplyr::filter(age %in% 4:14) %>%
-                  dplyr::select(year, age, cW),
-                by = c("year", "age")) %>%
-      dplyr::group_by(year) %>%
-      dplyr::summarise(Estimate = sum(n * cW) / 1e3) %>%
-      dplyr::mutate(variable = "bio")
-
-
-
-    pY %>%
-      dplyr::bind_rows(rec) %>%
-      dplyr::bind_rows(ssb) %>%
-      dplyr::bind_rows(tsb) %>%
-      dplyr::bind_rows(fbar) %>%
-      dplyr::bind_rows(bio) %>%
-      tibble::as_tibble() %>%
-      return()
+  lh <- function(x, variable) {
+    x %>%
+      as.data.frame() %>%
+      tibble::rownames_to_column(var="year") %>%
+      dplyr::mutate(year = as.integer(year),
+                    variable = variable) %>%
+      tibble::as_tibble()
   }
+
+  dplyr::bind_rows(stockassessment::catchtable(fit) %>% lh("catch"),
+                   stockassessment::rectable(fit)   %>% lh("rec"),
+                   stockassessment::ssbtable(fit)   %>% lh("ssb"),
+                   stockassessment::tsbtable(fit)   %>% lh("tsb"),
+                   stockassessment::fbartable(fit)  %>% lh("fbar")) %>%
+    dplyr::rename(est = Estimate,
+                  low = Low,
+                  high = High)
 
 }
 
+#' Title
+#'
+#' @param fit A "sam"-object
+#'
+#' @return A list containing tibbles "rbya" and "rby"
+#' @export
+#'
+sam_rbx <- function(fit) {
 
+  list(rbya = sam_rbya(fit, sam_ibya(fit)),
+       rby = sam_rby(fit))
+
+}
 
 sam_rby_retro <- function(retro, ibya) {
   out <- list()
@@ -229,7 +332,7 @@ sam_rby_retro <- function(retro, ibya) {
       dplyr::bind_rows(bio %>%
                          dplyr::select(year = year, Estimate = bio) %>%
                          dplyr::mutate(variable = "bio",
-                         assyear = i))
+                                       assyear = i))
 
   }
   out %>% dplyr::bind_rows() %>% tibble::as_tibble()
