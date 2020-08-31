@@ -50,16 +50,30 @@ sam_get_data <- function(assessment) {
 
 }
 
+
 #' sam_get_residuals
 #'
 #' @param assessment Name of run on stockassessment.org
 #'
 #' @return XXXX
+#'
+
 sam_get_residuals <- function(assessment) {
 
-  dat <- NA
-  load(url(sub("SN", assessment, "https://stockassessment.org/datadisk/stockassessment/userdirs/user3/SN/run/residuals.RData")))
-  return(dat)
+  fil <- sub("SN", assessment, "https://stockassessment.org/datadisk/stockassessment/userdirs/user3/SN/run/residuals.RData")
+
+  if(!RCurl::url.exists(fil)) {
+    stop(paste0("File: 'residuals.RData for ",
+                assessment,
+                " does not exist at: ",
+                sub("SN", assessment, "https://stockassessment.org/datadisk/stockassessment/userdirs/user3/SN/run"))
+    )
+  }
+
+
+  RES <- NA
+  load(url(fil))
+  return(RES)
 
 }
 
@@ -336,6 +350,36 @@ sam_rby_retro <- function(retro, ibya) {
 
   }
   out %>% dplyr::bind_rows() %>% tibble::as_tibble()
+}
+
+
+sam_fit <- function(fit, fleets = unique(fit$data$aux[,"fleet"])) {
+
+  fleets = unique(fit$data$aux[,"fleet"])
+  log <- TRUE
+  idx <- fit$data$aux[,"fleet"]%in%fleets
+  trans <- function(x) if(log){x}else{exp(x)}
+  p <- trans(fit$obj$report(c(fit$sdrep$par.fixed,fit$sdrep$par.random))$predObs[idx])
+  o <- trans(fit$data$logobs[idx])
+  aa <- fit$data$aux[idx,"age"]
+  neg.age <- (aa < -1.0e-6)
+  aa[neg.age] <- NA
+  a <- paste0("a=",aa," ")
+  f <- paste0(" f=",strtrim(attr(fit$data,"fleetNames")[fit$data$aux[idx,"fleet"]],50))
+  Year <- fit$data$aux[idx,"year"]
+  if(length(fleets)==1){
+    myby <- paste(a, ":", f)
+  }else{
+    myby <- cbind(a,f)
+  }
+
+
+  fleet <- strtrim(attr(fit$data,"fleetNames")[fit$data$aux[idx,"fleet"]],50)
+  tibble::tibble(year = Year,
+                 age = aa,
+                 fleet = fleet,
+                 o = o,
+                 p = p)
 }
 
 sam_process_error <- function(rbya, plus_group=TRUE, plot_it=FALSE) {

@@ -1,11 +1,11 @@
 Package: fishvice
 Type: Package
-Title: A collection of various personal functions used in stock assessment
+Title: A collection of various personal functions used in my work on fish stock assessment
 Version: 0.1.0
 Date: 2020-08-29
 Authors@R: person("Einar", "Hjorleifsson", email = "einarhjorleifsson@gmail.com",
   role = c("aut", "cre"))
-Description: Miscalaneous personal functions.
+Description: Some longer text here.
 Encoding: UTF-8
 Depends:
     R (>= 3.6.0)
@@ -29,6 +29,7 @@ LazyData: TRUE
 URL: http://github.com/einarhjorleifsson/fishvice
 BugReports: http://github.com/einarhjorleifsson/fishvice/issues
 Suggests:
-    knitr
+    knitr,
+    rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1

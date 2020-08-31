@@ -1,0 +1,62 @@
+---
+title: "On sam-functions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{on-sam}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(fishvice)
+```
+
+```{r}
+run <- "BW_2020"
+fit <- sam_get_fit(run)
+rbx <- sam_rbx(fit)
+```
+
+```{r}
+library(magrittr)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r, fig.width=7}
+rbx$rbya %>% 
+  mutate(yc = year - age) %>% 
+  ggplot(aes(year, oC, fill = factor(yc))) +
+  theme_bw() +
+  geom_col() +
+  facet_grid(age ~ ., scales = "free_y") +
+  scale_fill_crayola() +
+  theme(legend.position = "false") +
+  labs(x = NULL, y = NULL,
+       title = "Catch in numbers by age and yearclass")
+```
+
+
+```{r, fig.width = 7}
+rbx$rby %>% 
+  ggplot() + 
+  theme_bw() +
+  geom_ribbon(aes(year, ymin = low, ymax = high),
+              fill = "grey") +
+  geom_line(aes(year, est)) +
+  facet_wrap(~ variable, scales = "free_y") +
+  expand_limits(y = 0) +
+  labs(x = NULL, y = NULL,
+       tile = "Stock summary")
+```
+
+
