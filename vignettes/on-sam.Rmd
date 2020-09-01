@@ -1,5 +1,5 @@
 ---
-title: "On sam-functions"
+title: "on-sam"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{on-sam}
@@ -16,9 +16,10 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r}
 library(fishvice)
 ```
+
 
 ```{r}
 run <- "BW_2020"
@@ -27,7 +28,6 @@ rbx <- sam_rbx(fit)
 ```
 
 ```{r}
-library(magrittr)
 library(dplyr)
 library(ggplot2)
 ```

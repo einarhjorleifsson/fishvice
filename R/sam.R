@@ -382,7 +382,18 @@ sam_fit <- function(fit, fleets = unique(fit$data$aux[,"fleet"])) {
                  p = p)
 }
 
-sam_process_error <- function(rbya, plus_group=TRUE, plot_it=FALSE) {
+#' @title sam process error
+#'
+#' @description XXX
+#'
+#' @export
+#'
+#' @param rbya XXX
+#' @param plot_it XXX
+#' @param plot_catch XXX
+#' @param plus_group XXX
+#'
+sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_group=TRUE) {
 
   # dummy
   n.d <- cW <- year <- z.d <- age <- b <- 0
@@ -393,7 +404,7 @@ sam_process_error <- function(rbya, plus_group=TRUE, plot_it=FALSE) {
   x$year <- x$year - 1
   x$age <- x$age - 1
   names(x)[3] <- "n.end"
-  d <- plyr::join(rbya[,c("year", "age", "n", "m", "f", "cW")], x, by = c("year", "age"))
+  d <- plyr::join(rbya[,c("year","age","n","m","f","oC", "cW")],x, by=c("year","age"))
   d <- d[!is.na(d$n.end),]
 
   # ----------------------------------------------------------------------------
@@ -415,25 +426,44 @@ sam_process_error <- function(rbya, plus_group=TRUE, plot_it=FALSE) {
   # ----------------------------------------------------------------------------
   # process errror expressed as biomass
   x <- plyr::ddply(d,c("year"),plyr::summarise,b=sum(n.d * cW,na.rm=TRUE))
-  x <- plyr::ddply(d,c("year"),plyr::summarise,b=sum(n.d * cW,na.rm=TRUE))
+  x <-
+    d %>%
+    dplyr::group_by(year) %>%
+    dplyr::summarise(b = sum(n.d * cW, na.rm = TRUE),
+                     y = sum(oC * cW, na.rm = TRUE))
 
   if(plot_it) {
-    mort <- ggplot2::ggplot(d,ggplot2::aes(year,z.d)) +
+    mort <-
+      ggplot2::ggplot(d,ggplot2::aes(year,z.d)) +
       ggplot2::theme_bw() +
       ggplot2::geom_text(ggplot2::aes(label=age)) +
       ggplot2::stat_smooth(span=0.1) +
       ggplot2::labs(x="",y="",title="Process error expressed as deviations in mortality")
 
-    abun <- ggplot2::ggplot(d,ggplot2::aes(year,n.d)) +
+    abun <-
+      ggplot2::ggplot(d,ggplot2::aes(year,n.d)) +
       ggplot2::theme_bw() +
       ggplot2::geom_bar(stat="identity") +
       ggplot2::facet_wrap(~ age, scale="free_y") +
       ggplot2::labs(x="", y="",title="Process error expressed as deviations in number of fish")
 
-    mass <- ggplot2::ggplot(x[x$year < max(x$year),],ggplot2::aes(year,b)) +
+    mass <- ggplot2::ggplot(x, ggplot2::aes(year, b)) +
       ggplot2::theme_bw() +
       ggplot2::geom_bar(stat="identity") +
       ggplot2::labs(x="",y="Mass",title="Process error expressed as deviation in mass")
+
+    if(plot_catch) {
+      abun <-
+        abun +
+        ggplot2::geom_point(ggplot2::aes(y = oC),
+                            colour = "red",
+                            size = 0.5)
+      mass <-
+        mass +
+        ggplot2::geom_point(ggplot2::aes(y = y),
+                            colour = "red",
+                            size = 0.5)
+    }
 
     return(list(rbya=d,rby=x,mort=mort,abun=abun,mass=mass))
   }
@@ -441,3 +471,63 @@ sam_process_error <- function(rbya, plus_group=TRUE, plot_it=FALSE) {
   return(list(rbya=d, rby=x))
 
 }
+
+
+#' Observations, predictions and residuals
+#'
+#' @param fit A "sam" object
+#' @param lgs boolean (default TRUE) indicating if data should return
+#' as logs or as ordinary (then FALSE).
+#'
+#' @return A list of length 2 containing the following:
+#' \itemize{
+#'    \item data: A tibble with the following variables:
+#'    \itemize{
+#'       \item year:
+#'       \item age:
+#'       \item fleet: Name of the fleets
+#'       \item o: Observed value, default log scale
+#'       \item p: Predicted value, default log scale
+#'       \item r: Residuals (always log scale), difference between observed and predicted.
+#'       }
+#'    \item plot: A list containing a plot of the observed and predicted values for each fleet.
+#'    }
+#'
+#' @export
+#'
+sam_opr <- function(fit, lgs = TRUE) {
+
+  d <-
+    fit %>%
+    sam_fit() %>%
+    dplyr::mutate(r = o - p)
+
+  if(!lgs) {
+    d <-
+      d %>%
+      dplyr::mutate(o = exp(o),
+                    p = exp(p))
+  }
+
+  fleets <- d %>% dplyr::pull(fleet) %>% unique()
+  p.list <- list()
+  for(i in 1:length(fleets)) {
+    p.list[[i]] <-
+      d %>%
+      dplyr::filter(fleet == fleets[i]) %>%
+      ggplot2::ggplot() +
+      ggplot2::geom_point(ggplot2::aes(year, o), size = 0.5) +
+      ggplot2::geom_line(aes(year, p)) +
+      ggplot2::facet_wrap(~ age, scale = "free_y") +
+      ggplot2::labs(x = NULL, y = NULL,
+                    subtitle = fleets[i],
+                    caption = paste0("Scale: ",
+                                     ifelse(lgs, "Log", "Ordinary")))
+  }
+  names(p.list) <- fleets
+
+  return(list(data = d,
+              plots = p.list))
+
+}
+
