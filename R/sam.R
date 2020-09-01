@@ -496,7 +496,7 @@ sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_grou
 }
 
 
-#' Observations, predictions and residuals
+#' Fit to data
 #'
 #' @param fit A "sam" object
 #' @param lgs boolean (default TRUE) indicating if data should return
@@ -544,7 +544,7 @@ sam_opr <- function(fit, lgs = TRUE, scale = 1) {
       dplyr::filter(fleet == fleets[i]) %>%
       ggplot2::ggplot() +
       ggplot2::geom_point(ggplot2::aes(year, o), size = 0.5) +
-      ggplot2::geom_line(aes(year, p)) +
+      ggplot2::geom_line(ggplot2::aes(year, p)) +
       ggplot2::facet_wrap(~ age, scales = "free_y") +
       ggplot2::labs(x = NULL, y = NULL,
                     subtitle = fleets[i],
@@ -557,4 +557,119 @@ sam_opr <- function(fit, lgs = TRUE, scale = 1) {
               plots = p.list))
 
 }
+
+sam_ypr <- function(fit) {
+
+  tmp <- stockassessment::ypr(fit)
+  res <- tibble::tibble(fbar = tmp$fbar,
+                        yield = tmp$yield,
+                        ssb = tmp$ssb)
+  ref <- tibble::tibble(ref = c("Fmax", "F01", "F35"),
+                        fbar = c(tmp$fmax, tmp$f01, tmp$f35),
+                        ssb = c(res$ssb[tmp$fmaxIdx],
+                                res$ssb[tmp$f01Idx],
+                                res$ssb[tmp$f35Idx]),
+                        yield = c(res$yield[tmp$fmaxIdx],
+                                  res$yield[tmp$f01Idx],
+                                  res$yield[tmp$f35Idx]))
+
+  return(list(ypr = res, ref = ref))
+
+}
+
+#if(!all(fit$conf$obsCorStruct=="ID")){
+#  corplot(fit)
+#  setcap("Estimated correlations", "Estimates correlations between age groups for each fleet")
+#  stampit(fit)
+#}
+# CHECK OUT: stockassessment:::obscorrplot.sam
+# obscov(fit, TRUE)
+
+# "One-observation-ahead residuals", "Standardized one-observation-ahead residuals."
+
+#' One-observation-ahead residuals
+#'
+#' @description Note, this is normally just plotted using plot(res)
+#' @param res An object returned from {stockassessment::residuals}
+#'
+#' @return A tibble, the "one-observation-ahead-residuals" is in
+#' variable residual.
+
+sam_one_observation_ahead_residuals <- function(res) {
+
+  if(class(res) != "samres") stop("Object has to be of class 'samres'")
+
+  # must be an easier way for the following:
+  d <- tibble::tibble(year = res$year,
+                      fleet = res$fleet,
+                      age = res$age,
+                      observation = res$observation,
+                      nll = res$nll,
+                      grad = res$grad,
+                      mean = res$mean,
+                      residual = res$residual)
+  key <- tibble::tibble(fleet = d$fleet %>% unique(),
+                        what = attributes(RES)$fleetNames)
+
+  d %>%
+    dplyr::left_join(key, by = "fleet") %>%
+    return()
+
+}
+
+
+#empirobscorrplot(RES)
+#setcap("One-observation-ahead residual correlations", "Residual correlations.")
+# stockassessment:::empirobscorrplot.samres(RES)
+#stockassessment:::empirobscorrplot.samres
+#function (res, ...)
+#{
+# res <- RES
+# dat <- data.frame(resid = res$residual, age = res$age, year = res$year,
+#                   fleet = res$fleet)
+# fleets <- unique(dat$fleet)
+# fn <- attr(res, "fleetNames")
+# str(dat)
+#
+# x <- list()
+# for (i in 1:length(fleets)) {
+#   tmp <- xtabs(resid ~ age + year, data = dat[dat$fleet ==
+#                                                 fleets[i], ])
+#   xx <- cor(t(tmp))
+#   x[[length(x) + 1]] <- xx
+# }
+#
+# corplotcommon(x, fn)
+
+
+# Process residuals ----------------------------------
+# if(exists("RESP")){
+#   plot(RESP)
+#   setcap("Process residuals", "Standardized single-joint-sample residuals of process increments")
+#   stampit(fit)
+#   par(mfrow=c(1,1))
+# }
+
+#' Proces residuals
+#'
+#' @param resp An object returned from {stockassessment::procres}
+#'
+#' @return A tibble
+
+sam_process_residuals <- function(resp) {
+
+  d <-
+    tibble::tibble(year = resp$year,
+                   age = resp$age,
+                   fleet = resp$fleet,
+                   residual = resp$residual)
+  key <-
+    tibble::tibble(fleet = d$fleet %>% unique(),
+                   fleetn = attributes(resp)$fleetNames)
+  d %>%
+    left_join(key, by = "fleet") %>%
+    return()
+
+}
+
 

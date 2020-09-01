@@ -2,7 +2,7 @@
 % Please edit documentation in R/sam.R
 \name{sam_opr}
 \alias{sam_opr}
-\title{Observations, predictions and residuals}
+\title{Fit to data}
 \usage{
 sam_opr(fit, lgs = TRUE, scale = 1)
 }
@@ -30,5 +30,5 @@ A list of length 2 containing the following:
    }
 }
 \description{
-Observations, predictions and residuals
+Fit to data
 }

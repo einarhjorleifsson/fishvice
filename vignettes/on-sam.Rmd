@@ -22,9 +22,9 @@ library(fishvice)
 
 
 ```{r}
-run <- "BW_2020"
-fit <- sam_get_fit(run)
-rbx <- sam_rbx(fit)
+fit <- sam_get_fit("BW_2020")
+rbx <- sam_rbx(fit, scale = 1e6)
+opr <- sam_opr(fit, lgs = FALSE, scale = 1e6)
 ```
 
 ```{r}
@@ -41,10 +41,10 @@ rbx$rbya %>%
   facet_grid(age ~ ., scales = "free_y") +
   scale_fill_crayola() +
   theme(legend.position = "false") +
+  scale_y_continuous(NULL, NULL) +
   labs(x = NULL, y = NULL,
        title = "Catch in numbers by age and yearclass")
 ```
-
 
 ```{r, fig.width = 7}
 rbx$rby %>% 
@@ -59,4 +59,15 @@ rbx$rby %>%
        tile = "Stock summary")
 ```
 
+```{r}
+opr$plots$`Residual catch`
+opr$plots$IBWSS
+```
+
+```{r}
+pro <- sam_process_error(rbx$rbya, plot_it = TRUE, plot_catch = TRUE)
+pro$mort
+pro$abun
+pro$mass
+```
 
