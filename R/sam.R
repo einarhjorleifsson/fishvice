@@ -585,11 +585,11 @@ sam_ypr <- function(fit) {
 # CHECK OUT: stockassessment:::obscorrplot.sam
 # obscov(fit, TRUE)
 
-# "One-observation-ahead residuals", "Standardized one-observation-ahead residuals."
 
 #' One-observation-ahead residuals
 #'
 #' @description Note, this is normally just plotted using plot(res)
+#'
 #' @param res An object returned from {stockassessment::residuals}
 #'
 #' @return A tibble, the "one-observation-ahead-residuals" is in
@@ -609,7 +609,7 @@ sam_one_observation_ahead_residuals <- function(res) {
                       mean = res$mean,
                       residual = res$residual)
   key <- tibble::tibble(fleet = d$fleet %>% unique(),
-                        what = attributes(RES)$fleetNames)
+                        what = attributes(res)$fleetNames)
 
   d %>%
     dplyr::left_join(key, by = "fleet") %>%
@@ -667,7 +667,7 @@ sam_process_residuals <- function(resp) {
     tibble::tibble(fleet = d$fleet %>% unique(),
                    fleetn = attributes(resp)$fleetNames)
   d %>%
-    left_join(key, by = "fleet") %>%
+    dplyr::left_join(key, by = "fleet") %>%
     return()
 
 }
