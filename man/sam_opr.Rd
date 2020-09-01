@@ -4,13 +4,15 @@
 \alias{sam_opr}
 \title{Observations, predictions and residuals}
 \usage{
-sam_opr(fit, lgs = TRUE)
+sam_opr(fit, lgs = TRUE, scale = 1)
 }
 \arguments{
 \item{fit}{A "sam" object}
 
 \item{lgs}{boolean (default TRUE) indicating if data should return
 as logs or as ordinary (then FALSE).}
+
+\item{scale}{A scaler (default 1)}
 }
 \value{
 A list of length 2 containing the following:

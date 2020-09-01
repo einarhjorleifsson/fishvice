@@ -4,10 +4,12 @@
 \alias{sam_rby}
 \title{sam_rby}
 \usage{
-sam_rby(fit)
+sam_rby(fit, scale = 1)
 }
 \arguments{
 \item{fit}{XXX}
+
+\item{scale}{A scaler (default 1)}
 }
 \value{
 A tibble containing the following variables:

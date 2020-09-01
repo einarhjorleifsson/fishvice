@@ -93,10 +93,11 @@ sam_get_retro <- function(assessment) {
 #' sam_ibya_fromsam
 #'
 #' @param fit An object of class sam (often named fit by users)
+#' @param scale A scaler (default 1)
 #'
 #' @return A tibble
 
-sam_ibya_fromsam <- function(fit) {
+sam_ibya_fromsam <- function(fit, scale = 1) {
 
   if(class(fit)[[1]] != "sam")
     stop('Object has to be of class "sam"')
@@ -121,6 +122,7 @@ sam_ibya_fromsam <- function(fit) {
     obs %>%
     dplyr::filter(fleet == 1) %>%
     dplyr::select(year, age, oC = obs) %>%
+    dplyr::mutate(oC = oC / scale) %>%
     dplyr::full_join(lh(data$catchMeanWeight, cW), by = c("year", "age")) %>%
     dplyr::full_join(lh(data$disMeanWeight, dW), by = c("year", "age")) %>%
     dplyr::full_join(lh(data$landFrac, lF), by = c("year", "age")) %>%
@@ -141,6 +143,7 @@ sam_ibya_fromsam <- function(fit) {
 #' @description sam input data as a tibble
 #'
 #' @param fit A "sam"-object
+#' @param scale A scaler (default 1)
 #'
 #' @return A tibble containing the following variables:
 #' \itemize{
@@ -164,10 +167,10 @@ sam_ibya_fromsam <- function(fit) {
 #'
 #'
 
-sam_ibya <- function(fit) {
+sam_ibya <- function(fit, scale = 1) {
 
   if(class(fit)[[1]] == "sam") {
-    return(sam_ibya_fromsam(fit))
+    return(sam_ibya_fromsam(fit, scale = scale))
   }
 
   # # Older code, reading stuff from text-files
@@ -236,6 +239,7 @@ sam_ibya <- function(fit) {
 #'
 #' @param fit A "sam" object
 #' @param ibya A tibble containing input data by year and age
+#' @param scale A scaler (default 1)
 #'
 #' @return A tibble, containing at minimum:
 #' \itemize{
@@ -247,13 +251,14 @@ sam_ibya <- function(fit) {
 #'
 #' @export
 #'
-sam_rbya <- function(fit, ibya) {
+sam_rbya <- function(fit, ibya, scale = 1) {
 
   nay <-
     stockassessment::ntable(fit) %>%
     as.data.frame() %>%
     dplyr::mutate(year = rownames(.) %>% as.integer()) %>%
-    tidyr::gather(age, n, -year, convert = TRUE)
+    tidyr::gather(age, n, -year, convert = TRUE) %>%
+    dplyr::mutate(n = n / scale)
   fay <-
     stockassessment::faytable(fit) %>%
     as.data.frame() %>%
@@ -265,8 +270,17 @@ sam_rbya <- function(fit, ibya) {
     tibble::as_tibble()
 
   if(!missing(ibya)) {
+    res <-
+      res %>%
+      dplyr::full_join(ibya, by = c("year", "age"))
+
+    tmp <-
+      res %>%
+      sam_process_error()
     res %>%
-      dplyr::full_join(ibya, by = c("year", "age")) %>%
+      dplyr::left_join(tmp$rbya %>%
+                         dplyr::select(year, age, m2 = z.d),
+                       by = c("year", "age")) %>%
       return()
   } else {
     res %>% return()
@@ -279,6 +293,7 @@ sam_rbya <- function(fit, ibya) {
 #' @description Get assessment summary data from "sam"-object
 #'
 #' @param fit XXX
+#' @param scale A scaler (default 1)
 #'
 #' @return A tibble containing the following variables:
 #' \itemize{
@@ -290,21 +305,25 @@ sam_rbya <- function(fit, ibya) {
 #' }
 #' @export
 #'
-sam_rby <- function(fit) {
+sam_rby <- function(fit, scale = 1) {
 
-  lh <- function(x, variable) {
+  lh <- function(x, variable, scale = 1) {
     x %>%
       as.data.frame() %>%
-      tibble::rownames_to_column(var="year") %>%
+      tibble::rownames_to_column(var = "year") %>%
       dplyr::mutate(year = as.integer(year),
                     variable = variable) %>%
-      tibble::as_tibble()
+      tibble::as_tibble() %>%
+      dplyr::mutate(Estimate = Estimate / scale,
+                    Low = Low / scale,
+                    High = High / scale)
+
   }
 
-  dplyr::bind_rows(stockassessment::catchtable(fit) %>% lh("catch"),
-                   stockassessment::rectable(fit)   %>% lh("rec"),
-                   stockassessment::ssbtable(fit)   %>% lh("ssb"),
-                   stockassessment::tsbtable(fit)   %>% lh("tsb"),
+  dplyr::bind_rows(stockassessment::catchtable(fit) %>% lh("catch", scale = scale),
+                   stockassessment::rectable(fit)   %>% lh("rec", scale = scale),
+                   stockassessment::ssbtable(fit)   %>% lh("ssb", scale = scale),
+                   stockassessment::tsbtable(fit)   %>% lh("tsb", scale = scale),
                    stockassessment::fbartable(fit)  %>% lh("fbar")) %>%
     dplyr::rename(est = Estimate,
                   low = Low,
@@ -315,14 +334,15 @@ sam_rby <- function(fit) {
 #' Title
 #'
 #' @param fit A "sam"-object
+#' @param scale A scaler (default 1)
 #'
 #' @return A list containing tibbles "rbya" and "rby"
 #' @export
 #'
-sam_rbx <- function(fit) {
+sam_rbx <- function(fit, scale = 1) {
 
-  list(rbya = sam_rbya(fit, sam_ibya(fit)),
-       rby = sam_rby(fit))
+  list(rbya = sam_rbya(fit, sam_ibya(fit, scale = scale), scale = scale),
+       rby = sam_rby(fit, scale = scale))
 
 }
 
@@ -434,23 +454,26 @@ sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_grou
 
   if(plot_it) {
     mort <-
-      ggplot2::ggplot(d,ggplot2::aes(year,z.d)) +
+      ggplot2::ggplot(d,ggplot2::aes(year, z.d)) +
       ggplot2::theme_bw() +
-      ggplot2::geom_text(ggplot2::aes(label=age)) +
-      ggplot2::stat_smooth(span=0.1) +
-      ggplot2::labs(x="",y="",title="Process error expressed as deviations in mortality")
+      ggplot2::geom_text(ggplot2::aes(label = age)) +
+      ggplot2::stat_smooth(span = 0.1) +
+      ggplot2::labs(x = NULL, y = NULL,
+                    title = "Process error expressed as deviations in mortality")
 
     abun <-
-      ggplot2::ggplot(d,ggplot2::aes(year,n.d)) +
+      ggplot2::ggplot(d, ggplot2::aes(year, n.d)) +
       ggplot2::theme_bw() +
-      ggplot2::geom_bar(stat="identity") +
-      ggplot2::facet_wrap(~ age, scale="free_y") +
-      ggplot2::labs(x="", y="",title="Process error expressed as deviations in number of fish")
+      ggplot2::geom_col() +
+      ggplot2::facet_wrap(~ age, scales = "free_y") +
+      ggplot2::labs(x = NULL, y = NULL,
+                    title = "Process error expressed as deviations in number of fish")
 
     mass <- ggplot2::ggplot(x, ggplot2::aes(year, b)) +
       ggplot2::theme_bw() +
       ggplot2::geom_bar(stat="identity") +
-      ggplot2::labs(x="",y="Mass",title="Process error expressed as deviation in mass")
+      ggplot2::labs(x = NULL, y = "Mass",
+                    title = "Process error expressed as deviation in mass")
 
     if(plot_catch) {
       abun <-
@@ -465,7 +488,7 @@ sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_grou
                             size = 0.5)
     }
 
-    return(list(rbya=d,rby=x,mort=mort,abun=abun,mass=mass))
+    return(list(rbya = d, rby = x, mort = mort, abun = abun, mass = mass))
   }
 
   return(list(rbya=d, rby=x))
@@ -478,6 +501,7 @@ sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_grou
 #' @param fit A "sam" object
 #' @param lgs boolean (default TRUE) indicating if data should return
 #' as logs or as ordinary (then FALSE).
+#' @param scale A scaler (default 1)
 #'
 #' @return A list of length 2 containing the following:
 #' \itemize{
@@ -495,12 +519,15 @@ sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_grou
 #'
 #' @export
 #'
-sam_opr <- function(fit, lgs = TRUE) {
+sam_opr <- function(fit, lgs = TRUE, scale = 1) {
 
   d <-
     fit %>%
     sam_fit() %>%
-    dplyr::mutate(r = o - p)
+    #             CHECK if this is kosher
+    dplyr::mutate(o = log(exp(o) / scale),
+                  p = log(exp(p) / scale),
+                  r = o - p)
 
   if(!lgs) {
     d <-
@@ -518,7 +545,7 @@ sam_opr <- function(fit, lgs = TRUE) {
       ggplot2::ggplot() +
       ggplot2::geom_point(ggplot2::aes(year, o), size = 0.5) +
       ggplot2::geom_line(aes(year, p)) +
-      ggplot2::facet_wrap(~ age, scale = "free_y") +
+      ggplot2::facet_wrap(~ age, scales = "free_y") +
       ggplot2::labs(x = NULL, y = NULL,
                     subtitle = fleets[i],
                     caption = paste0("Scale: ",

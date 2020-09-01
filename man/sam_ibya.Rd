@@ -4,10 +4,12 @@
 \alias{sam_ibya}
 \title{sam_ibya}
 \usage{
-sam_ibya(fit)
+sam_ibya(fit, scale = 1)
 }
 \arguments{
 \item{fit}{A "sam"-object}
+
+\item{scale}{A scaler (default 1)}
 }
 \value{
 A tibble containing the following variables:

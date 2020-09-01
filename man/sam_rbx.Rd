@@ -4,10 +4,12 @@
 \alias{sam_rbx}
 \title{Title}
 \usage{
-sam_rbx(fit)
+sam_rbx(fit, scale = 1)
 }
 \arguments{
 \item{fit}{A "sam"-object}
+
+\item{scale}{A scaler (default 1)}
 }
 \value{
 A list containing tibbles "rbya" and "rby"

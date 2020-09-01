@@ -4,12 +4,14 @@
 \alias{sam_rbya}
 \title{sam_rbya}
 \usage{
-sam_rbya(fit, ibya)
+sam_rbya(fit, ibya, scale = 1)
 }
 \arguments{
 \item{fit}{A "sam" object}
 
 \item{ibya}{A tibble containing input data by year and age}
+
+\item{scale}{A scaler (default 1)}
 }
 \value{
 A tibble, containing at minimum:

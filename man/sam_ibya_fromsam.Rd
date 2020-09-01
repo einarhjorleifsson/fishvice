@@ -4,10 +4,12 @@
 \alias{sam_ibya_fromsam}
 \title{sam_ibya_fromsam}
 \usage{
-sam_ibya_fromsam(fit)
+sam_ibya_fromsam(fit, scale = 1)
 }
 \arguments{
 \item{fit}{An object of class sam (often named fit by users)}
+
+\item{scale}{A scaler (default 1)}
 }
 \value{
 A tibble
