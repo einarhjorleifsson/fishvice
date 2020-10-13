@@ -18,22 +18,20 @@ knitr::opts_chunk$set(
 
 ```{r}
 library(fishvice)
+library(dplyr)
+library(ggplot2)
 ```
 
 
 ```{r}
 fit <- sam_get_fit("BW_2020")
-rbx <- sam_rbx(fit, scale = 1e6)
+rbya <- sam_rbya(fit, data = TRUE)
+rby  <- sam_rby(fit)
 opr <- sam_opr(fit, lgs = FALSE, scale = 1e6)
 ```
 
-```{r}
-library(dplyr)
-library(ggplot2)
-```
-
 ```{r, fig.width=7}
-rbx$rbya %>% 
+rbya %>% 
   mutate(yc = year - age) %>% 
   ggplot(aes(year, oC, fill = factor(yc))) +
   theme_bw() +
@@ -47,7 +45,7 @@ rbx$rbya %>%
 ```
 
 ```{r, fig.width = 7}
-rbx$rby %>% 
+rby %>% 
   ggplot() + 
   theme_bw() +
   geom_ribbon(aes(year, ymin = low, ymax = high),
@@ -65,7 +63,7 @@ opr$plots$IBWSS
 ```
 
 ```{r}
-pro <- sam_process_error(rbx$rbya, plot_it = TRUE, plot_catch = TRUE)
+pro <- sam_process_error(rbya, plot_it = TRUE, plot_catch = TRUE)
 pro$mort
 pro$abun
 pro$mass

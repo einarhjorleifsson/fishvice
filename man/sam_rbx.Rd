@@ -4,12 +4,15 @@
 \alias{sam_rbx}
 \title{Title}
 \usage{
-sam_rbx(fit, scale = 1)
+sam_rbx(fit, scale = 1, process = FALSE)
 }
 \arguments{
 \item{fit}{A "sam"-object}
 
 \item{scale}{A scaler (default 1)}
+
+\item{process}{A boolean (default FALSE), if TRUE returns a variable m2
+that is supposedly some kind of an indicator of the process error.}
 }
 \value{
 A list containing tibbles "rbya" and "rby"

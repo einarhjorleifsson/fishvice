@@ -14,10 +14,4 @@
 #'
 "rba_icod"
 
-#' ple4
-#'
-#' Example file: North Sea Place 2015 assessment results
-#'
-#' @author David Miller <david.miller@@wur.nl>
-#'
-"ple4"
+
