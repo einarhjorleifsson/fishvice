@@ -510,6 +510,30 @@ sam_process_residuals <- function(resp) {
     return()
 
 }
+# Some experimental stuff
+
+#' @param fit A "sam" object
+#'
+#' @return A tibble
+#'
+sam_catchability <- function(fit) {
+  Q <- fit$pl$logFpar
+  Qsd <- fit$plsd$logFpar
+  key <- fit$conf$keyLogFpar
+  fun <- function(x)if(x<0){NA}else{Q[x+1]}
+  FF <- Vectorize(fun)
+  ages <- fit$conf$minAge:fit$conf$maxAge
+  Qage <- exp(t(matrix(FF(key), nrow = nrow(key))))
+  d <-
+    Qage %>%
+    as_tibble()
+  names(d) <- attr(fit$data, "fleetNames")[1:nrow(key)]
+  d$age <- ages
+  d %>%
+    gather(fleet, value, -age) %>%
+    drop_na()
+
+}
 
 
 # ------------------------------------------------------------------------------
