@@ -512,6 +512,8 @@ sam_process_residuals <- function(resp) {
 }
 # Some experimental stuff
 
+#' Sam catcability
+#'
 #' @param fit A "sam" object
 #'
 #' @return A tibble
@@ -526,12 +528,12 @@ sam_catchability <- function(fit) {
   Qage <- exp(t(matrix(FF(key), nrow = nrow(key))))
   d <-
     Qage %>%
-    as_tibble()
+    tidyr::as_tibble()
   names(d) <- attr(fit$data, "fleetNames")[1:nrow(key)]
   d$age <- ages
   d %>%
-    gather(fleet, value, -age) %>%
-    drop_na()
+    tidyr::gather(fleet, value, -age) %>%
+    tidyr::drop_na()
 
 }
 

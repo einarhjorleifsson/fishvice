@@ -35,4 +35,5 @@ r2lat <- function(x) {
   lon <- (x - lat * 100)%%50
   halfb <- (x - 100 * lat - lon)/100
   lat <- lat + 60 + halfb + 0.25
+  return(lat)
 }

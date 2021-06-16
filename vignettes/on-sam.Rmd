@@ -24,7 +24,7 @@ library(ggplot2)
 
 
 ```{r}
-fit <- sam_get_fit("BW_2020")
+fit <- sam_get_fit("NEA_cod_AFWG_2021")
 rbya <- sam_rbya(fit, data = TRUE)
 rby  <- sam_rby(fit)
 opr <- sam_opr(fit, lgs = FALSE, scale = 1e6)

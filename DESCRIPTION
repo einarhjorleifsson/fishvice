@@ -1,8 +1,8 @@
 Package: fishvice
 Type: Package
 Title: A collection of various personal functions used in my work on fish stock assessment
-Version: 0.2.0
-Date: 2020-08-29
+Version: 0.3.0
+Date: 2021-06-16
 Authors@R: person("Einar", "Hjorleifsson", email = "einarhjorleifsson@gmail.com",
   role = c("aut", "cre"))
 Description: Some longer text here.
