@@ -204,7 +204,8 @@ sam_rby <- function(fit, scale = 1) {
 sam_rbx <- function(fit, scale = 1, process = FALSE) {
 
   list(rbya = sam_rbya(fit, data = TRUE, scale = scale, process = process),
-       rby = sam_rby(fit, scale = scale))
+       rby = sam_rby(fit, scale = scale),
+       opr = sam_fit(fit))
 
 }
 
