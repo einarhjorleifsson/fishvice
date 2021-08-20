@@ -167,27 +167,34 @@ sam_rbya <- function(fit, data = TRUE, process = FALSE, scale = 1) {
 #'
 sam_rby <- function(fit, scale = 1) {
 
-  lh <- function(x, variable, scale = 1) {
-    x %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column(var = "year") %>%
-      dplyr::mutate(year = as.integer(year),
-                    variable = variable) %>%
-      tibble::as_tibble() %>%
-      dplyr::mutate(Estimate = Estimate / scale,
-                    Low = Low / scale,
-                    High = High / scale)
+  if(class(fit)[[1]] == "sam") {
 
+    lh <- function(x, variable, scale = 1) {
+      x %>%
+        as.data.frame() %>%
+        tibble::rownames_to_column(var = "year") %>%
+        dplyr::mutate(year = as.integer(year),
+                      variable = variable) %>%
+        tibble::as_tibble() %>%
+        dplyr::mutate(Estimate = Estimate / scale,
+                      Low = Low / scale,
+                      High = High / scale)
+
+    }
+
+    dplyr::bind_rows(stockassessment::catchtable(fit) %>% lh("catch", scale = scale),
+                     stockassessment::rectable(fit)   %>% lh("rec", scale = scale),
+                     stockassessment::ssbtable(fit)   %>% lh("ssb", scale = scale),
+                     stockassessment::tsbtable(fit)   %>% lh("tsb", scale = scale),
+                     stockassessment::fbartable(fit)  %>% lh("fbar")) %>%
+      dplyr::rename(est = Estimate,
+                    low = Low,
+                    high = High) %>%
+      return()
+  } else {
+    flsam_rby(fit, scale = scale) %>%
+      return()
   }
-
-  dplyr::bind_rows(stockassessment::catchtable(fit) %>% lh("catch", scale = scale),
-                   stockassessment::rectable(fit)   %>% lh("rec", scale = scale),
-                   stockassessment::ssbtable(fit)   %>% lh("ssb", scale = scale),
-                   stockassessment::tsbtable(fit)   %>% lh("tsb", scale = scale),
-                   stockassessment::fbartable(fit)  %>% lh("fbar")) %>%
-    dplyr::rename(est = Estimate,
-                  low = Low,
-                  high = High)
 
 }
 
