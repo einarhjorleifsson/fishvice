@@ -24,9 +24,10 @@ A list of length 2 containing the following:
       \item fleet: Name of the fleets
       \item o: Observed value, default log scale
       \item p: Predicted value, default log scale
-      \item r: Residuals (always log scale), difference between observed and predicted.
+      \item r: Residuals (always log scale), difference between observed and predicted. NOTE:
+      Not standardised
       }
-   \item plot: A list containing a plot of the observed and predicted values for each fleet.
+   \item plot: A list containing a plot of the observed and predicted values for each fleet. Not operational.
    }
 }
 \description{

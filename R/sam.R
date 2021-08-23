@@ -216,11 +216,9 @@ sam_rbx <- function(fit, scale = 1, process = FALSE) {
 
 }
 
-
-
 sam_fit <- function(fit, fleets = unique(fit$data$aux[,"fleet"])) {
 
-  fleets = unique(fit$data$aux[,"fleet"])
+  fleets <- unique(fit$data$aux[,"fleet"])
   log <- TRUE
   idx <- fit$data$aux[,"fleet"]%in%fleets
   trans <- function(x) if(log){x}else{exp(x)}
@@ -359,9 +357,10 @@ sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_grou
 #'       \item fleet: Name of the fleets
 #'       \item o: Observed value, default log scale
 #'       \item p: Predicted value, default log scale
-#'       \item r: Residuals (always log scale), difference between observed and predicted.
+#'       \item r: Residuals (always log scale), difference between observed and predicted. NOTE:
+#'       Not standardised
 #'       }
-#'    \item plot: A list containing a plot of the observed and predicted values for each fleet.
+#'    \item plot: A list containing a plot of the observed and predicted values for each fleet. Not operational.
 #'    }
 #'
 #' @export
@@ -383,30 +382,37 @@ sam_opr <- function(fit, lgs = TRUE, scale = 1) {
                     p = exp(p))
   }
 
-  fleets <- d %>% dplyr::pull(fleet) %>% unique()
-  p.list <- list()
-  for(i in 1:length(fleets)) {
-    p.list[[i]] <-
-      d %>%
-      dplyr::filter(fleet == fleets[i]) %>%
-      ggplot2::ggplot() +
-      ggplot2::geom_point(ggplot2::aes(year, o), size = 0.5) +
-      ggplot2::geom_line(ggplot2::aes(year, p)) +
-      ggplot2::facet_wrap(~ age, scales = "free_y") +
-      ggplot2::labs(x = NULL, y = NULL,
-                    subtitle = fleets[i],
-                    caption = paste0("Scale: ",
-                                     ifelse(lgs, "Log", "Ordinary")))
-  }
-  names(p.list) <- fleets
+  if(FALSE) {
 
-  return(list(data = d,
-              plots = p.list))
+    fleets <- d %>% dplyr::pull(fleet) %>% unique()
+    p.list <- list()
+    for(i in 1:length(fleets)) {
+      p.list[[i]] <-
+        d %>%
+        dplyr::filter(fleet == fleets[i]) %>%
+        ggplot2::ggplot() +
+        ggplot2::geom_point(ggplot2::aes(year, o), size = 0.5) +
+        ggplot2::geom_line(ggplot2::aes(year, p)) +
+        ggplot2::facet_wrap(~ age, scales = "free_y") +
+        ggplot2::labs(x = NULL, y = NULL,
+                      subtitle = fleets[i],
+                      caption = paste0("Scale: ",
+                                       ifelse(lgs, "Log", "Ordinary")))
+    }
+    names(p.list) <- fleets
+
+    return(list(data = d,
+                plots = p.list))
+
+  } else {
+    return(d)
+  }
 
 }
 
 sam_ypr <- function(fit) {
 
+  # NOTE: May want to pass arguements to ypr, like number of years, etc.
   tmp <- stockassessment::ypr(fit)
   res <- tibble::tibble(fbar = tmp$fbar,
                         yield = tmp$yield,
