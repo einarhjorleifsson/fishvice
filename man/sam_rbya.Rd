@@ -4,7 +4,7 @@
 \alias{sam_rbya}
 \title{sam_rbya}
 \usage{
-sam_rbya(fit, data = TRUE, process = FALSE, scale = 1)
+sam_rbya(fit, data = TRUE, scale = 1)
 }
 \arguments{
 \item{fit}{A "sam" object}
@@ -12,10 +12,10 @@ sam_rbya(fit, data = TRUE, process = FALSE, scale = 1)
 \item{data}{A boolean (default TRUE) specifying if input data should also
 be returned.}
 
+\item{scale}{A scaler (default 1)}
+
 \item{process}{A boolean (default FALSE), if TRUE returns a variable m2
 that is supposedly some kind of an indicator of the process error.}
-
-\item{scale}{A scaler (default 1)}
 }
 \value{
 A tibble, containing at minimum:

@@ -2,17 +2,15 @@
 % Please edit documentation in R/sam.R
 \name{sam_opr}
 \alias{sam_opr}
-\title{Fit to data}
+\title{Sam fit}
 \usage{
-sam_opr(fit, lgs = TRUE, scale = 1)
+sam_opr(fit, lgs = TRUE)
 }
 \arguments{
 \item{fit}{A "sam" object}
 
 \item{lgs}{boolean (default TRUE) indicating if data should return
 as logs or as ordinary (then FALSE).}
-
-\item{scale}{A scaler (default 1)}
 }
 \value{
 A list of length 2 containing the following:
@@ -25,11 +23,10 @@ A list of length 2 containing the following:
       \item o: Observed value, default log scale
       \item p: Predicted value, default log scale
       \item r: Residuals (always log scale), difference between observed and predicted. NOTE:
-      Not standardised
+      yet returned
       }
-   \item plot: A list containing a plot of the observed and predicted values for each fleet. Not operational.
    }
 }
 \description{
-Fit to data
+Observed and predicted values
 }

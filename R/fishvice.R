@@ -1,15 +1,15 @@
 #' Results by year
 #'
-#' @param o An object of class FLSAM or FLStock
+#' @param o An object of class sam, FLSAM or FLStock
 #'
 #' @return A tibble containing key metric by year
 #' @export
 #'
 fv_rby <- function(o) {
 
-  if(class(o)[[1]] == "sam") {
-    return(sam_rby(o))
-  }
+  if(class(o)[[1]] == "sam")  return(sam_rby(o))
+  if(class(o)[[1]] == "FLSAM") return(fls_rby(o))
+  if(class(o)[[1]] == "FLStock") return(flr_rby(o))
 
 }
 
@@ -22,9 +22,10 @@ fv_rby <- function(o) {
 #'
 fv_rbya <- function(o) {
 
-  #if(class(o)[[1]] == "FLSAM") return(fls_rby(o))
-  #if(class(o)[[1]] == "FLStock") return(flr_rby(o))
   if(class(o)[[1]] == "sam") return(sam_rbya(o))
+  if(class(o)[[1]] == "FLSAM") return(fls_rbya(o))
+  if(class(o)[[1]] == "FLStock") return(flr_rbya(o))
+
 
 }
 
@@ -37,9 +38,10 @@ fv_rbya <- function(o) {
 #'
 fv_opr <- function(o) {
 
-  #if(class(o)[[1]] == "FLSAM") return(fls_rby(o))
+
   #if(class(o)[[1]] == "FLStock") return(flr_rby(o))
   if(class(o)[[1]] == "sam") return(sam_opr(o))
+  if(class(o)[[1]] == "FLSAM") return(fls_opr(o))
 
 }
 

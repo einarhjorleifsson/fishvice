@@ -7,7 +7,7 @@
 fv_rby(o)
 }
 \arguments{
-\item{o}{An object of class FLSAM or FLStock}
+\item{o}{An object of class sam, FLSAM or FLStock}
 }
 \value{
 A tibble containing key metric by year

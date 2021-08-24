@@ -1,5 +1,17 @@
-# ------------------------------------------------------------------------------
-# pry data from fit (class sam)
+# A: sam rbx -------------------------------------------------------------------
+
+#' sam_get_fit
+#'
+#' @param assessment Name of run on stockassessment.org
+#'
+#' @return A "sam"-object
+#'
+#' @export
+sam_get_fit <- function(assessment) {
+
+  stockassessment::fitfromweb(assessment, character.only = TRUE)
+
+}
 
 #' @title sam_ibya
 #'
@@ -19,8 +31,6 @@
 #'   \item m: Assumed natural mortality (M)
 #'   \item mat: Maturity ogive
 #'   \item oC: Observed catch
-#'   \item oU1: Observed survey index 1
-#'   \item pU2: Observed survey index 2, etc.
 #'   \item pF: Proportional F prior to spawning
 #'   \item pM: Proportional M prior to spawning
 #'   \item sW: Spawning stock weight
@@ -64,25 +74,12 @@ sam_ibya <- function(fit, scale = 1) {
     dplyr::full_join(lh(data$natMor, m), by = c("year", "age")) %>%
     dplyr::full_join(lh(data$propF, pF), by = c("year", "age")) %>%
     dplyr::full_join(lh(data$propM, pM), by = c("year", "age")) %>%
-    dplyr::full_join(lh(data$stockMeanWeight, sW), by = c("year", "age")) %>%
-    # assume always on year-age flett
-    dplyr::full_join(obs %>% dplyr::filter(fleet == 2) %>%
-                       dplyr::select(year, age, oU1 = obs),
-                     by = c("year", "age"))
-
-  # add tuning fleet 2 if available
-  if(obs$fleet %>% unique() %>% length() > 2) {
-    d <-
-      d %>%
-      dplyr::full_join(obs %>% dplyr::filter(fleet == 3) %>% dplyr::select(year, age, oU2 = obs))
-  }
+    dplyr::full_join(lh(data$stockMeanWeight, sW), by = c("year", "age"))
 
   return(d)
 
 }
 
-
-# TO DO: add the residuals
 
 #' @title sam_rbya
 #'
@@ -107,7 +104,7 @@ sam_ibya <- function(fit, scale = 1) {
 #'
 #' @export
 #'
-sam_rbya <- function(fit, data = TRUE, process = FALSE, scale = 1) {
+sam_rbya <- function(fit, data = TRUE, scale = 1) {
 
   nay <-
     stockassessment::ntable(fit) %>%
@@ -130,18 +127,6 @@ sam_rbya <- function(fit, data = TRUE, process = FALSE, scale = 1) {
       fit %>%
       sam_ibya(scale = scale) %>%
       dplyr::full_join(res, by = c("year", "age"))
-  }
-
-  if(process) {
-
-    tmp <-
-      res %>%
-      sam_process_error()
-    res <-
-      res %>%
-      dplyr::left_join(tmp$rbya %>%
-                         dplyr::select(year, age, m2 = z.d),
-                       by = c("year", "age"))
   }
 
   return(res)
@@ -167,9 +152,7 @@ sam_rbya <- function(fit, data = TRUE, process = FALSE, scale = 1) {
 #'
 sam_rby <- function(fit, scale = 1) {
 
-  if(class(fit)[[1]] == "sam") {
-
-    lh <- function(x, variable, scale = 1) {
+  lh <- function(x, variable, scale = 1) {
       x %>%
         as.data.frame() %>%
         tibble::rownames_to_column(var = "year") %>%
@@ -191,36 +174,40 @@ sam_rby <- function(fit, scale = 1) {
                     low = Low,
                     high = High) %>%
       return()
-  } else {
-    flsam_rby(fit, scale = scale) %>%
-      return()
-  }
 
 }
 
-#' Title
+#' Sam fit
 #'
-#' @param fit A "sam"-object
-#' @param scale A scaler (default 1)
-#' @param process A boolean (default FALSE), if TRUE returns a variable m2
-#' that is supposedly some kind of an indicator of the process error.
+#' Observed and predicted values
 #'
-#' @return A list containing tibbles "rbya" and "rby"
+#' @param fit A "sam" object
+#' @param lgs boolean (default TRUE) indicating if data should return
+#' as logs or as ordinary (then FALSE).
+#'
+#' @return A list of length 2 containing the following:
+#' \itemize{
+#'    \item data: A tibble with the following variables:
+#'    \itemize{
+#'       \item year:
+#'       \item age:
+#'       \item fleet: Name of the fleets
+#'       \item o: Observed value, default log scale
+#'       \item p: Predicted value, default log scale
+#'       \item r: Residuals (always log scale), difference between observed and predicted. NOTE:
+#'       yet returned
+#'       }
+#'    }
+#'
 #' @export
 #'
-sam_rbx <- function(fit, scale = 1, process = FALSE) {
+sam_opr <- function(fit, lgs = TRUE) {
 
-  list(rbya = sam_rbya(fit, data = TRUE, scale = scale, process = process),
-       rby = sam_rby(fit, scale = scale),
-       opr = sam_fit(fit))
-
-}
-
-sam_fit <- function(fit, fleets = unique(fit$data$aux[,"fleet"])) {
+  # code from stockassessment
 
   fleets <- unique(fit$data$aux[,"fleet"])
   log <- TRUE
-  idx <- fit$data$aux[,"fleet"]%in%fleets
+  idx <- fit$data$aux[,"fleet"] %in% fleets
   trans <- function(x) if(log){x}else{exp(x)}
   p <- trans(fit$obj$report(c(fit$sdrep$par.fixed,fit$sdrep$par.random))$predObs[idx])
   o <- trans(fit$data$logobs[idx])
@@ -236,144 +223,14 @@ sam_fit <- function(fit, fleets = unique(fit$data$aux[,"fleet"])) {
     myby <- cbind(a,f)
   }
 
-
   fleet <- strtrim(attr(fit$data,"fleetNames")[fit$data$aux[idx,"fleet"]],50)
-  tibble::tibble(year = Year,
+
+  d <-
+    tibble::tibble(year = Year,
                  age = aa,
                  fleet = fleet,
                  o = o,
                  p = p)
-}
-
-#' @title sam process error
-#'
-#' @description XXX
-#'
-#' @export
-#'
-#' @param rbya XXX
-#' @param plot_it XXX
-#' @param plot_catch XXX
-#' @param plus_group XXX
-#'
-sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_group=TRUE) {
-
-  # dummy
-  n.d <- cW <- year <- z.d <- age <- b <- 0
-
-  # ----------------------------------------------------------------------------
-  # align the year-classes
-  x <- rbya[,c("year","age","n")]
-  x$year <- x$year - 1
-  x$age <- x$age - 1
-  names(x)[3] <- "n.end"
-  d <- plyr::join(rbya[,c("year","age","n","m","f","oC", "cW")],x, by=c("year","age"))
-  d <- d[!is.na(d$n.end),]
-  # Note: could have a problem for the terminal year
-  d$f[is.na(d$f)] <- 0
-
-  # ----------------------------------------------------------------------------
-  # exclude plus-group
-  if(plus_group) d <- d[d$age < max(d$age),]
-
-  # ----------------------------------------------------------------------------
-  # process error expressed as mortality
-  d$z.n <- log(d$n/d$n.end)
-  d$z.f <- d$f + d$m
-  d$z.d  <- d$z.n - d$z.f
-
-  # ----------------------------------------------------------------------------
-  # process error expressed as numbers
-  d$n.end2 <- d$n * exp(-(d$f + d$m))
-  # Calculate the difference
-  d$n.d <- d$n.end - d$n.end2
-
-  # ----------------------------------------------------------------------------
-  # process errror expressed as biomass
-  x <- plyr::ddply(d,c("year"),plyr::summarise,b=sum(n.d * cW,na.rm=TRUE))
-  x <-
-    d %>%
-    dplyr::group_by(year) %>%
-    dplyr::summarise(b = sum(n.d * cW, na.rm = TRUE),
-                     y = sum(oC * cW, na.rm = TRUE))
-
-  if(plot_it) {
-    mort <-
-      ggplot2::ggplot(d,ggplot2::aes(year, z.d)) +
-      ggplot2::theme_bw() +
-      ggplot2::geom_text(ggplot2::aes(label = age)) +
-      ggplot2::stat_smooth(span = 0.1) +
-      ggplot2::labs(x = NULL, y = NULL,
-                    title = "Process error expressed as deviations in mortality")
-
-    abun <-
-      ggplot2::ggplot(d, ggplot2::aes(year, n.d)) +
-      ggplot2::theme_bw() +
-      ggplot2::geom_col() +
-      ggplot2::facet_wrap(~ age, scales = "free_y") +
-      ggplot2::labs(x = NULL, y = NULL,
-                    title = "Process error expressed as deviations in number of fish")
-
-    mass <- ggplot2::ggplot(x, ggplot2::aes(year, b)) +
-      ggplot2::theme_bw() +
-      ggplot2::geom_bar(stat="identity") +
-      ggplot2::labs(x = NULL, y = "Mass",
-                    title = "Process error expressed as deviation in mass")
-
-    if(plot_catch) {
-      abun <-
-        abun +
-        ggplot2::geom_point(ggplot2::aes(y = oC),
-                            colour = "red",
-                            size = 0.5)
-      mass <-
-        mass +
-        ggplot2::geom_point(ggplot2::aes(y = y),
-                            colour = "red",
-                            size = 0.5)
-    }
-
-    return(list(rbya = d, rby = x, mort = mort, abun = abun, mass = mass))
-  }
-
-  return(list(rbya=d, rby=x))
-
-}
-
-
-#' Fit to data
-#'
-#' @param fit A "sam" object
-#' @param lgs boolean (default TRUE) indicating if data should return
-#' as logs or as ordinary (then FALSE).
-#' @param scale A scaler (default 1)
-#'
-#' @return A list of length 2 containing the following:
-#' \itemize{
-#'    \item data: A tibble with the following variables:
-#'    \itemize{
-#'       \item year:
-#'       \item age:
-#'       \item fleet: Name of the fleets
-#'       \item o: Observed value, default log scale
-#'       \item p: Predicted value, default log scale
-#'       \item r: Residuals (always log scale), difference between observed and predicted. NOTE:
-#'       Not standardised
-#'       }
-#'    \item plot: A list containing a plot of the observed and predicted values for each fleet. Not operational.
-#'    }
-#'
-#' @export
-#'
-sam_opr <- function(fit, lgs = TRUE, scale = 1) {
-
-  d <-
-    fit %>%
-    sam_fit() %>%
-    #             CHECK if this is kosher
-    dplyr::mutate(o = log(exp(o) / scale),
-                  p = log(exp(p) / scale),
-                  r = o - p)
 
   if(!lgs) {
     d <-
@@ -382,63 +239,31 @@ sam_opr <- function(fit, lgs = TRUE, scale = 1) {
                     p = exp(p))
   }
 
-  if(FALSE) {
-
-    fleets <- d %>% dplyr::pull(fleet) %>% unique()
-    p.list <- list()
-    for(i in 1:length(fleets)) {
-      p.list[[i]] <-
-        d %>%
-        dplyr::filter(fleet == fleets[i]) %>%
-        ggplot2::ggplot() +
-        ggplot2::geom_point(ggplot2::aes(year, o), size = 0.5) +
-        ggplot2::geom_line(ggplot2::aes(year, p)) +
-        ggplot2::facet_wrap(~ age, scales = "free_y") +
-        ggplot2::labs(x = NULL, y = NULL,
-                      subtitle = fleets[i],
-                      caption = paste0("Scale: ",
-                                       ifelse(lgs, "Log", "Ordinary")))
-    }
-    names(p.list) <- fleets
-
-    return(list(data = d,
-                plots = p.list))
-
-  } else {
-    return(d)
-  }
+  return(d)
 
 }
 
-sam_ypr <- function(fit) {
+#' rbx tibbles from object class "sam"
+#'
+#' @param fit A "sam"-object
+#' @param scale A scaler (default 1)
+#'
+#' @return A list containing tibbles "rby", "rbya" and "opr"
+#'
+sam_rbx <- function(fit, scale = 1) {
 
-  # NOTE: May want to pass arguements to ypr, like number of years, etc.
-  tmp <- stockassessment::ypr(fit)
-  res <- tibble::tibble(fbar = tmp$fbar,
-                        yield = tmp$yield,
-                        ssb = tmp$ssb)
-  ref <- tibble::tibble(ref = c("Fmax", "F01", "F35"),
-                        fbar = c(tmp$fmax, tmp$f01, tmp$f35),
-                        ssb = c(res$ssb[tmp$fmaxIdx],
-                                res$ssb[tmp$f01Idx],
-                                res$ssb[tmp$f35Idx]),
-                        yield = c(res$yield[tmp$fmaxIdx],
-                                  res$yield[tmp$f01Idx],
-                                  res$yield[tmp$f35Idx]))
-
-  return(list(ypr = res, ref = ref))
+  list(rby = sam_rby(fit, scale = scale),
+       rbya = sam_rbya(fit, data = TRUE, scale = scale),
+       opr = sam_fit(fit, scal = scale))
 
 }
 
-#if(!all(fit$conf$obsCorStruct=="ID")){
-#  corplot(fit)
-#  setcap("Estimated correlations", "Estimates correlations between age groups for each fleet")
-#  stampit(fit)
-#}
-# CHECK OUT: stockassessment:::obscorrplot.sam
-# obscov(fit, TRUE)
+# B: FLRSAM --------------------------------------------------------------------
 
 
+
+
+# B: residuals, work in progress -----------------------------------------------
 #' One-observation-ahead residuals
 #'
 #' @description Note, this is normally just plotted using plot(res)
@@ -524,6 +349,141 @@ sam_process_residuals <- function(resp) {
     return()
 
 }
+
+
+
+# C: sam various ---------------------------------------------------------------
+
+
+
+
+#' @title sam process error
+#'
+#' @description XXX
+#'
+#' @export
+#'
+#' @param rbya XXX
+#' @param plot_it XXX
+#' @param plot_catch XXX
+#' @param plus_group XXX
+#'
+sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_group=TRUE) {
+
+  # dummy
+  n.d <- cW <- year <- z.d <- age <- b <- 0
+
+  #
+  # align the year-classes
+  x <- rbya[,c("year","age","n")]
+  x$year <- x$year - 1
+  x$age <- x$age - 1
+  names(x)[3] <- "n.end"
+  d <- plyr::join(rbya[,c("year","age","n","m","f","oC", "cW")],x, by=c("year","age"))
+  d <- d[!is.na(d$n.end),]
+  # Note: could have a problem for the terminal year
+  d$f[is.na(d$f)] <- 0
+
+  #
+  # exclude plus-group
+  if(plus_group) d <- d[d$age < max(d$age),]
+
+  #
+  # process error expressed as mortality
+  d$z.n <- log(d$n/d$n.end)
+  d$z.f <- d$f + d$m
+  d$z.d  <- d$z.n - d$z.f
+
+  #
+  # process error expressed as numbers
+  d$n.end2 <- d$n * exp(-(d$f + d$m))
+  # Calculate the difference
+  d$n.d <- d$n.end - d$n.end2
+
+  #
+  # process errror expressed as biomass
+  x <- plyr::ddply(d,c("year"),plyr::summarise,b=sum(n.d * cW,na.rm=TRUE))
+  x <-
+    d %>%
+    dplyr::group_by(year) %>%
+    dplyr::summarise(b = sum(n.d * cW, na.rm = TRUE),
+                     y = sum(oC * cW, na.rm = TRUE))
+
+  if(plot_it) {
+    mort <-
+      ggplot2::ggplot(d,ggplot2::aes(year, z.d)) +
+      ggplot2::theme_bw() +
+      ggplot2::geom_text(ggplot2::aes(label = age)) +
+      ggplot2::stat_smooth(span = 0.1) +
+      ggplot2::labs(x = NULL, y = NULL,
+                    title = "Process error expressed as deviations in mortality")
+
+    abun <-
+      ggplot2::ggplot(d, ggplot2::aes(year, n.d)) +
+      ggplot2::theme_bw() +
+      ggplot2::geom_col() +
+      ggplot2::facet_wrap(~ age, scales = "free_y") +
+      ggplot2::labs(x = NULL, y = NULL,
+                    title = "Process error expressed as deviations in number of fish")
+
+    mass <- ggplot2::ggplot(x, ggplot2::aes(year, b)) +
+      ggplot2::theme_bw() +
+      ggplot2::geom_bar(stat="identity") +
+      ggplot2::labs(x = NULL, y = "Mass",
+                    title = "Process error expressed as deviation in mass")
+
+    if(plot_catch) {
+      abun <-
+        abun +
+        ggplot2::geom_point(ggplot2::aes(y = oC),
+                            colour = "red",
+                            size = 0.5)
+      mass <-
+        mass +
+        ggplot2::geom_point(ggplot2::aes(y = y),
+                            colour = "red",
+                            size = 0.5)
+    }
+
+    return(list(rbya = d, rby = x, mort = mort, abun = abun, mass = mass))
+  }
+
+  return(list(rbya=d, rby=x))
+
+}
+
+
+
+sam_ypr <- function(fit) {
+
+  # NOTE: May want to pass arguements to ypr, like number of years, etc.
+  tmp <- stockassessment::ypr(fit)
+  res <- tibble::tibble(fbar = tmp$fbar,
+                        yield = tmp$yield,
+                        ssb = tmp$ssb)
+  ref <- tibble::tibble(ref = c("Fmax", "F01", "F35"),
+                        fbar = c(tmp$fmax, tmp$f01, tmp$f35),
+                        ssb = c(res$ssb[tmp$fmaxIdx],
+                                res$ssb[tmp$f01Idx],
+                                res$ssb[tmp$f35Idx]),
+                        yield = c(res$yield[tmp$fmaxIdx],
+                                  res$yield[tmp$f01Idx],
+                                  res$yield[tmp$f35Idx]))
+
+  return(list(ypr = res, ref = ref))
+
+}
+
+#if(!all(fit$conf$obsCorStruct=="ID")){
+#  corplot(fit)
+#  setcap("Estimated correlations", "Estimates correlations between age groups for each fleet")
+#  stampit(fit)
+#}
+# CHECK OUT: stockassessment:::obscorrplot.sam
+# obscov(fit, TRUE)
+
+
+
 # Some experimental stuff
 
 #' Sam catcability
@@ -580,18 +540,7 @@ sam_get_directory <- function(assessment, user = "user3") {
 }
 
 
-#' sam_get_fit
-#'
-#' @param assessment Name of run on stockassessment.org
-#'
-#' @return A "sam"-object
-#'
-#' @export
-sam_get_fit <- function(assessment) {
 
-  stockassessment::fitfromweb(assessment, character.only = TRUE)
-
-}
 
 #' sam_get_data
 #'

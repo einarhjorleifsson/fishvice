@@ -23,8 +23,6 @@ A tibble containing the following variables:
   \item m: Assumed natural mortality (M)
   \item mat: Maturity ogive
   \item oC: Observed catch
-  \item oU1: Observed survey index 1
-  \item pU2: Observed survey index 2, etc.
   \item pF: Proportional F prior to spawning
   \item pM: Proportional M prior to spawning
   \item sW: Spawning stock weight

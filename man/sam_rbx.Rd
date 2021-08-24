@@ -2,21 +2,18 @@
 % Please edit documentation in R/sam.R
 \name{sam_rbx}
 \alias{sam_rbx}
-\title{Title}
+\title{rbx tibbles from object class "sam"}
 \usage{
-sam_rbx(fit, scale = 1, process = FALSE)
+sam_rbx(fit, scale = 1)
 }
 \arguments{
 \item{fit}{A "sam"-object}
 
 \item{scale}{A scaler (default 1)}
-
-\item{process}{A boolean (default FALSE), if TRUE returns a variable m2
-that is supposedly some kind of an indicator of the process error.}
 }
 \value{
-A list containing tibbles "rbya" and "rby"
+A list containing tibbles "rby", "rbya" and "opr"
 }
 \description{
-Title
+rbx tibbles from object class "sam"
 }
