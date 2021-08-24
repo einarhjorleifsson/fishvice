@@ -38,8 +38,8 @@ fls_rbya <- function(fl, stk, des) {
     FLCore:::as.data.frame() %>%
     tidyr::as_tibble() %>%
     dplyr::select(year, age, var = slot, val = data) %>%
-    dplyr::mutate(var = case_when(var == "stock.n" ~ "n",
-                                  var == "harvest" ~ "f")) %>%
+    dplyr::mutate(var = dplyr::case_when(var == "stock.n" ~ "n",
+                                         var == "harvest" ~ "f")) %>%
     tidyr::spread(var, val) %>%
     dplyr::mutate(stk = stk,
                   des = des)

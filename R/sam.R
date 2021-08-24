@@ -230,7 +230,8 @@ sam_opr <- function(fit, lgs = TRUE) {
                  age = aa,
                  fleet = fleet,
                  o = o,
-                 p = p)
+                 p = p) %>%
+    dplyr::mutate(fleet = ifelse(fleet == "Residual catch", "catch", fleet))
 
   if(!lgs) {
     d <-
