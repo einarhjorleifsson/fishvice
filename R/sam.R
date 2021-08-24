@@ -250,11 +250,13 @@ sam_opr <- function(fit, lgs = TRUE) {
 #'
 #' @return A list containing tibbles "rby", "rbya" and "opr"
 #'
+#' @export
+#'
 sam_rbx <- function(fit, scale = 1) {
 
   list(rby = sam_rby(fit, scale = scale),
        rbya = sam_rbya(fit, data = TRUE, scale = scale),
-       opr = sam_fit(fit, scal = scale))
+       opr = sam_opr(fit))
 
 }
 
