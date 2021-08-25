@@ -40,7 +40,7 @@ fv_opr <- function(o) {
 
 
   #if(class(o)[[1]] == "FLStock") return(flr_rby(o))
-  if(class(o)[[1]] == "sam") return(sam_opr(o))
+  if(class(o)[[1]] == "sam")   return(sam_opr(o))
   if(class(o)[[1]] == "FLSAM") return(fls_opr(o))
 
 }

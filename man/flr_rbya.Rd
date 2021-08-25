@@ -4,7 +4,7 @@
 \alias{flr_rbya}
 \title{xxx}
 \usage{
-flr_rbya(fl, scale = 1, stk, des, wide = TRUE)
+flr_rbya(fl, scale = 1, stk, des)
 }
 \arguments{
 \item{fl}{An FLStock object}
@@ -13,9 +13,6 @@ flr_rbya(fl, scale = 1, stk, des, wide = TRUE)
 
 \item{stk}{Name of the run, if missing (default) will use the directory name
 or stock name if FL-object.}
-
-\item{wide}{A boolean (default TRUE). If FALSE values returned as a single
-column (named "val"), variable names specified in column named "var"}
 
 \item{dec}{desc if an FL-object}
 }
