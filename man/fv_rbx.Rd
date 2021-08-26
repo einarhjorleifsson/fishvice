@@ -4,10 +4,12 @@
 \alias{fv_rbx}
 \title{Obtain key metrics}
 \usage{
-fv_rbx(o)
+fv_rbx(o, scale = 1)
 }
 \arguments{
 \item{o}{An object of class sam, FLSAM or a directory path (for muppet)}
+
+\item{scale}{A scale for the scaleable variables}
 }
 \value{
 A list containing tibbles

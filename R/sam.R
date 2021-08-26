@@ -182,6 +182,7 @@ sam_rby <- function(fit, scale = 1) {
 #' Observed and predicted values
 #'
 #' @param fit A "sam" object
+#' @param scale A scale for the scaleable variables
 #' @param lgs boolean (default TRUE) indicating if data should return
 #' as logs or as ordinary (then FALSE).
 #'
@@ -201,7 +202,7 @@ sam_rby <- function(fit, scale = 1) {
 #'
 #' @export
 #'
-sam_opr <- function(fit, lgs = TRUE) {
+sam_opr <- function(fit, scale = 1, lgs = TRUE) {
 
   # code from stockassessment
 

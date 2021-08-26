@@ -4,10 +4,12 @@
 \alias{sam_opr}
 \title{Sam fit}
 \usage{
-sam_opr(fit, lgs = TRUE)
+sam_opr(fit, scale = 1, lgs = TRUE)
 }
 \arguments{
 \item{fit}{A "sam" object}
+
+\item{scale}{A scale for the scaleable variables}
 
 \item{lgs}{boolean (default TRUE) indicating if data should return
 as logs or as ordinary (then FALSE).}

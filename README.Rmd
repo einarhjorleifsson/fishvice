@@ -1,0 +1,19 @@
+---
+title: "Fishvice"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The concept:
+
+```{r}
+library(magrittr)
+stockassessment::fitfromweb("BW-2021") %>% 
+  fishvice::fv_rbx()
+```
+

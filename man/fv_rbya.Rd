@@ -4,10 +4,12 @@
 \alias{fv_rbya}
 \title{Results by year and age}
 \usage{
-fv_rbya(o)
+fv_rbya(o, scale)
 }
 \arguments{
 \item{o}{An object of class FLSAM or FLStock}
+
+\item{scale}{A scale for the scaleable variables}
 }
 \value{
 A tibble containing key metric by year

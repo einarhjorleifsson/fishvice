@@ -4,10 +4,12 @@
 \alias{fv_rby}
 \title{Results by year}
 \usage{
-fv_rby(o)
+fv_rby(o, scale = 1)
 }
 \arguments{
 \item{o}{An object of class sam, FLSAM or FLStock}
+
+\item{scale}{A scale for the scaleable variables}
 }
 \value{
 A tibble containing key metric by year
