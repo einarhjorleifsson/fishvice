@@ -4,15 +4,12 @@
 \alias{sam_opr}
 \title{Sam fit}
 \usage{
-sam_opr(fit, scale = 1, lgs = TRUE)
+sam_opr(fit, scale = 1)
 }
 \arguments{
 \item{fit}{A "sam" object}
 
 \item{scale}{A scale for the scaleable variables}
-
-\item{lgs}{boolean (default TRUE) indicating if data should return
-as logs or as ordinary (then FALSE).}
 }
 \value{
 A list of length 2 containing the following:
@@ -24,8 +21,7 @@ A list of length 2 containing the following:
       \item fleet: Name of the fleets
       \item o: Observed value, default log scale
       \item p: Predicted value, default log scale
-      \item r: Residuals (always log scale), difference between observed and predicted. NOTE:
-      yet returned
+      \item r: Residuals, not yet returned
       }
    }
 }

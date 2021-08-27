@@ -153,27 +153,27 @@ sam_rbya <- function(fit, data = TRUE, scale = 1) {
 sam_rby <- function(fit, scale = 1) {
 
   lh <- function(x, variable, scale = 1) {
-      x %>%
-        as.data.frame() %>%
-        tibble::rownames_to_column(var = "year") %>%
-        dplyr::mutate(year = as.integer(year),
-                      variable = variable) %>%
-        tibble::as_tibble() %>%
-        dplyr::mutate(Estimate = Estimate / scale,
-                      Low = Low / scale,
-                      High = High / scale)
+    x %>%
+      as.data.frame() %>%
+      tibble::rownames_to_column(var = "year") %>%
+      dplyr::mutate(year = as.integer(year),
+                    variable = variable) %>%
+      tibble::as_tibble() %>%
+      dplyr::mutate(Estimate = Estimate / scale,
+                    Low = Low / scale,
+                    High = High / scale)
 
-    }
+  }
 
-    dplyr::bind_rows(stockassessment::catchtable(fit) %>% lh("catch", scale = scale),
-                     stockassessment::rectable(fit)   %>% lh("rec", scale = scale),
-                     stockassessment::ssbtable(fit)   %>% lh("ssb", scale = scale),
-                     stockassessment::tsbtable(fit)   %>% lh("tsb", scale = scale),
-                     stockassessment::fbartable(fit)  %>% lh("fbar")) %>%
-      dplyr::rename(est = Estimate,
-                    low = Low,
-                    high = High) %>%
-      return()
+  dplyr::bind_rows(stockassessment::catchtable(fit) %>% lh("catch", scale = scale),
+                   stockassessment::rectable(fit)   %>% lh("rec", scale = scale),
+                   stockassessment::ssbtable(fit)   %>% lh("ssb", scale = scale),
+                   stockassessment::tsbtable(fit)   %>% lh("tsb", scale = scale),
+                   stockassessment::fbartable(fit)  %>% lh("fbar")) %>%
+    dplyr::rename(est = Estimate,
+                  low = Low,
+                  high = High) %>%
+    return()
 
 }
 
@@ -183,8 +183,6 @@ sam_rby <- function(fit, scale = 1) {
 #'
 #' @param fit A "sam" object
 #' @param scale A scale for the scaleable variables
-#' @param lgs boolean (default TRUE) indicating if data should return
-#' as logs or as ordinary (then FALSE).
 #'
 #' @return A list of length 2 containing the following:
 #' \itemize{
@@ -195,14 +193,13 @@ sam_rby <- function(fit, scale = 1) {
 #'       \item fleet: Name of the fleets
 #'       \item o: Observed value, default log scale
 #'       \item p: Predicted value, default log scale
-#'       \item r: Residuals (always log scale), difference between observed and predicted. NOTE:
-#'       yet returned
+#'       \item r: Residuals, not yet returned
 #'       }
 #'    }
 #'
 #' @export
 #'
-sam_opr <- function(fit, scale = 1, lgs = TRUE) {
+sam_opr <- function(fit, scale = 1) {
 
   # code from stockassessment
 
@@ -229,29 +226,84 @@ sam_opr <- function(fit, scale = 1, lgs = TRUE) {
 
   d <-
     tibble::tibble(year = Year,
-                 age = aa,
-                 fleet = fleet,
-                 o = o,
-                 p = p) %>%
+                   age = aa,
+                   fleet = fleet,
+                   o = o,
+                   p = p) %>%
     dplyr::mutate(fleet = ifelse(fleet == "Residual catch", "catch", fleet))
-
-  if(!lgs) {
-    d <-
-      d %>%
-      dplyr::mutate(o = exp(o),
-                    p = exp(p))
-  }
 
   return(d)
 
 }
+
+sam_fleets <- function(fit) {
+  tibble::tibble(fleet_nr = sort(unique(fit$data$aux[,"fleet"])),
+                 fleet_name = attr(fit$data,"fleetNames"),
+                 keyBiomassTreat = fit$conf$keyBiomassTreat,
+                 obsLikelihoodFlag = as.character(fit$conf$obsLikelihoodFlag),
+                 obsCorStruct = as.character(fit$conf$obsCorStruct)) %>%
+    dplyr::mutate(fleet_name = ifelse(fleet_nr == 1, "catch", fleet_name))
+}
+
+sam_partable <- function(fit) {
+  lu <-
+    tibble::tribble(~name, ~par_conf,
+                    "logFpar", "keyLogFpar",
+                    "logSdLogFsta","keyVarF", #
+                    "logSdLogN", "keyVarLogN",
+                    "logSdLogObs", "keyVarObs",
+                    "transfIRARdist", "",
+                    "logitReleaseSurvival", "",
+                    "logitReleaseSurvival", "",
+                    "logitRecapturePhi", "")
+
+  fit %>%
+    stockassessment:::partable() %>%
+    as.data.frame() %>%
+    tibble::as_tibble(rownames = "name") %>%
+    janitor::clean_names() %>%
+    tidyr::separate(name, into = c("name", "key"), convert = TRUE) %>%
+    dplyr::left_join(lu, by = "name") %>%
+    dplyr::rename(sd = sd_par, est = exp_par) %>%
+    left_join(sam_conf_tbl(fit)) %>%
+    left_join(sam_fleets(fit))
+
+}
+
+sam_conf_tbl <- function(fit) {
+  lh <- function(conf, what) {
+    x <- conf[names(conf) == what]
+    x <- x[[1]]
+    colnames(x) <- conf$minAge:conf$maxAge
+    x %>%
+      as.data.frame() %>%
+      tibble::as_tibble(rownames = "fleet_nr") %>%
+      tidyr::gather(age, key, -fleet_nr, convert = TRUE) %>%
+      dplyr::mutate(fleet_nr = as.integer(fleet_nr),
+                    par_conf = what) %>%
+      dplyr::arrange(fleet_nr, age) %>%
+      dplyr::filter(key != -1)
+  }
+
+  dplyr::bind_rows(lh(fit$conf, "keyLogFsta"),
+                   lh(fit$conf, "keyLogFpar"),
+                   lh(fit$conf, "keyVarObs"),
+                   lh(fit$conf, "keyQpow"),
+                   lh(fit$conf, "keyVarF")) %>%
+    dplyr::select(par_conf, everything()) %>%
+    dplyr::bind_rows(tibble::tibble(par_conf = "keyVarLogN",
+                                    fleet_nr = -1,
+                                    age = fit$conf$minAge:fit$conf$maxAge,
+                                    key = fit$conf$keyVarLogN))
+}
+
 
 #' rbx tibbles from object class "sam"
 #'
 #' @param fit A "sam"-object
 #' @param scale A scaler (default 1)
 #'
-#' @return A list containing tibbles "rby", "rbya" and "opr"
+#' @return A list containing tibbles "rby", "rbya", "opr" and "par"
 #'
 #' @export
 #'
@@ -259,7 +311,8 @@ sam_rbx <- function(fit, scale = 1) {
 
   list(rby = sam_rby(fit, scale = scale),
        rbya = sam_rbya(fit, data = TRUE, scale = scale),
-       opr = sam_opr(fit))
+       opr = sam_opr(fit),
+       par = sam_partable(fit))
 
 }
 

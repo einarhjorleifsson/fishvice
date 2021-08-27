@@ -12,7 +12,7 @@ sam_rbx(fit, scale = 1)
 \item{scale}{A scaler (default 1)}
 }
 \value{
-A list containing tibbles "rby", "rbya" and "opr"
+A list containing tibbles "rby", "rbya", "opr" and "par"
 }
 \description{
 rbx tibbles from object class "sam"
