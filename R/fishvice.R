@@ -74,6 +74,12 @@ fv_par <- function(o, scale = 1) {
 #'
 fv_rbx <- function(o, scale = 1) {
 
+  if(!class(o)[[1]] %in% c("sam", "FLSAM", "FLStock")) {
+    stop(paste0("Object passed to the function 'fv_rbx' is of class '",
+                class(o),
+                "'.\nObjects passed has to be of class 'sam', 'FLSAM' or 'FLStock'."))
+  }
+
   list(rby  = fv_rby(o, scale = scale),
        rbya = fv_rbya(o, scale = scale),
        opr  = fv_opr(o, scale = scale),
