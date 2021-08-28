@@ -48,6 +48,22 @@ fv_opr <- function(o, scale = 1) {
 
 }
 
+#' Parameters
+#'
+#' @param o An object of class sam, FLSAM or a directory path (for muppet)
+#'
+#' @return A tibble containing key metrics
+#' @export
+#'
+fv_par <- function(o, scale = 1) {
+
+
+  #if(class(o)[[1]] == "FLStock")
+  if(class(o)[[1]] == "sam")   return(sam_partable(fit))
+  #if(class(o)[[1]] == "FLSAM")
+
+}
+
 #' Obtain key metrics
 #'
 #' @param o An object of class sam, FLSAM or a directory path (for muppet)
@@ -60,7 +76,8 @@ fv_rbx <- function(o, scale = 1) {
 
   list(rby  = fv_rby(o, scale = scale),
        rbya = fv_rbya(o, scale = scale),
-       opr  = fv_opr(o, scale = scale)) %>%
+       opr  = fv_opr(o, scale = scale),
+       par  = fv_par(o)) %>%
     return()
 
 }
