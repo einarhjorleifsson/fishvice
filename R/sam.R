@@ -262,7 +262,8 @@ sam_partable <- function(fit) {
     as.data.frame() %>%
     tibble::as_tibble(rownames = "name") %>%
     janitor::clean_names() %>%
-    tidyr::separate(name, into = c("name", "key"), convert = TRUE) %>%
+    dplyr::mutate(key = as.integer(stringr::str_replace(name, "^.+_", "")),
+                  name = stringr::str_sub(name, 1, nchar(name) - nchar(key) - 1)) %>%
     dplyr::left_join(lu, by = "name") %>%
     dplyr::rename(sd = sd_par, est = exp_par) %>%
     dplyr::left_join(sam_conf_tbl(fit),
