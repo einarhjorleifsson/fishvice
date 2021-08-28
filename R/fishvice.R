@@ -59,7 +59,7 @@ fv_par <- function(o, scale = 1) {
 
 
   #if(class(o)[[1]] == "FLStock")
-  if(class(o)[[1]] == "sam")   return(sam_partable(fit))
+  if(class(o)[[1]] == "sam")   return(sam_partable(o))
   #if(class(o)[[1]] == "FLSAM")
 
 }
