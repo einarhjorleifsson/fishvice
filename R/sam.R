@@ -269,7 +269,14 @@ sam_partable <- function(fit) {
     dplyr::left_join(sam_conf_tbl(fit),
                      by = c("key", "par_conf")) %>%
     dplyr::left_join(sam_fleets(fit),
-                     by = "fleet_nr")
+                     by = "fleet_nr") %>%
+    dplyr::mutate(what = dplyr::case_when(name == "logFpar" ~ "catchabilities",
+                            # NOTE: need to check output name
+                            name == "logSdLogObs" ~ "obsvar",
+                            name == "logSdLogN" ~ "process",
+                            par_conf == "keyQpow" ~ "powers",
+                            TRUE ~ "rest")) %>%
+    dplyr::select(fleet = fleet_name, age, m = par, cv = sd, est, low, high, what)
 
 }
 
