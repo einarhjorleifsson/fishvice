@@ -3,6 +3,7 @@
 export(flindices_to_rbya)
 export(flstock_to_rbya)
 export(fv_opr)
+export(fv_par)
 export(fv_rbx)
 export(fv_rby)
 export(fv_rbya)
