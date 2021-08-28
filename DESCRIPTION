@@ -8,7 +8,7 @@ Authors@R: person("Einar", "Hjorleifsson", email = "einarhjorleifsson@gmail.com"
 Description: Some longer text here.
 Encoding: UTF-8
 Depends:
-    R (>= 3.6.0)
+    R (>= 3.5.0)
 Imports:
     dplyr,
     ggplot2,
