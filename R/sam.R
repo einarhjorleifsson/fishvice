@@ -265,8 +265,10 @@ sam_partable <- function(fit) {
     tidyr::separate(name, into = c("name", "key"), convert = TRUE) %>%
     dplyr::left_join(lu, by = "name") %>%
     dplyr::rename(sd = sd_par, est = exp_par) %>%
-    dplyr::left_join(sam_conf_tbl(fit)) %>%
-    dplyr::left_join(sam_fleets(fit))
+    dplyr::left_join(sam_conf_tbl(fit),
+                     by = c("key", "par_conf")) %>%
+    dplyr::left_join(sam_fleets(fit),
+                     by = "fleet_nr")
 
 }
 
