@@ -19,6 +19,8 @@ sam_get_fit <- function(assessment) {
 #'
 #' @param fit A "sam"-object
 #' @param scale A scaler (default 1)
+#' @param long A boolean indicating if returned table wide (default TRUE) variables
+#' as names within column 'var'. Alternative (FALSE) not yet active.
 #'
 #' @return A tibble containing the following variables:
 #' \itemize{
@@ -40,7 +42,7 @@ sam_get_fit <- function(assessment) {
 #'
 #'
 
-sam_ibya <- function(fit, scale = 1) {
+sam_ibya <- function(fit, scale = 1, long = TRUE) {
 
   if(class(fit)[[1]] != "sam")
     stop('Object has to be of class "sam"')
@@ -93,6 +95,8 @@ sam_ibya <- function(fit, scale = 1) {
 #' @param process A boolean (default FALSE), if TRUE returns a variable m2
 #' that is supposedly some kind of an indicator of the process error.
 #' @param scale A scaler (default 1)
+#' @param long A boolean indicating if returned table wide (default TRUE) variables
+#' as names within column 'var'. Alternative (FALSE) not yet active.
 #'
 #' @return A tibble, containing at minimum:
 #' \itemize{
@@ -104,7 +108,7 @@ sam_ibya <- function(fit, scale = 1) {
 #'
 #' @export
 #'
-sam_rbya <- function(fit, data = TRUE, scale = 1) {
+sam_rbya <- function(fit, data = TRUE, scale = 1, long = TRUE) {
 
   nay <-
     stockassessment::ntable(fit) %>%
@@ -125,11 +129,15 @@ sam_rbya <- function(fit, data = TRUE, scale = 1) {
   if(data) {
     res <-
       fit %>%
-      sam_ibya(scale = scale) %>%
+      sam_ibya(scale = scale, long = FALSE) %>%
       dplyr::full_join(res, by = c("year", "age"))
   }
 
-  return(res)
+  if(long) {
+    res %>%
+      tidyr::gather(variable, val, -c(year, age)) %>%
+      return()
+  }
 
 }
 
@@ -300,7 +308,7 @@ sam_conf_tbl <- function(fit) {
                    lh(fit$conf, "keyVarObs"),
                    lh(fit$conf, "keyQpow"),
                    lh(fit$conf, "keyVarF")) %>%
-    dplyr::select(par_conf, everything()) %>%
+    dplyr::select(par_conf, dplyr::everything()) %>%
     dplyr::bind_rows(tibble::tibble(par_conf = "keyVarLogN",
                                     fleet_nr = -1,
                                     age = fit$conf$minAge:fit$conf$maxAge,

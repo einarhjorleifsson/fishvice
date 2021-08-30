@@ -1,15 +1,11 @@
 Package: fishvice
 Type: Package
 Title: A collection of various personal functions used in my work on fish stock assessment
-Version: 0.4.0
-Date: 2021-08-28
+Version: 0.4.1
+Date: 2021-08-30
 Authors@R: person("Einar", "Hjorleifsson", email = "einarhjorleifsson@gmail.com",
   role = c("aut", "cre"))
-Description: The aim of this package is to provide simple uniform tibbles from various
-classes that are outputs in various fish stock assessment packages (such as stockassessment, FLR's, 
-muppet, ...) for us mere mortals that do live in the tidyverse realm. The hypothesis is
-that this may aid in further scrutinization of inputs and results beyond that provided by the
-convenience standard output functions (tables and plots) provided by these packages.
+Description: The aim of this package is to provide simple uniform tibbles from various classes that are outputs from different fish stock assessment packages (such as stockassessment, FLRs, muppet and then some) for us mere mortals that do live in the tidyverse realm. This may aid in further scrutinization of inputs and results beyond that provided by the convenience standard output functions (tables and plots) provided by these packages.
 Encoding: UTF-8
 Depends:
     R (>= 3.5.0)

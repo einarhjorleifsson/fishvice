@@ -4,7 +4,7 @@
 \alias{sam_rbya}
 \title{sam_rbya}
 \usage{
-sam_rbya(fit, data = TRUE, scale = 1)
+sam_rbya(fit, data = TRUE, scale = 1, long = TRUE)
 }
 \arguments{
 \item{fit}{A "sam" object}
@@ -13,6 +13,9 @@ sam_rbya(fit, data = TRUE, scale = 1)
 be returned.}
 
 \item{scale}{A scaler (default 1)}
+
+\item{long}{A boolean indicating if returned table wide (default TRUE) variables
+as names within column 'var'. Alternative (FALSE) not yet active.}
 
 \item{process}{A boolean (default FALSE), if TRUE returns a variable m2
 that is supposedly some kind of an indicator of the process error.}

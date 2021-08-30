@@ -4,12 +4,15 @@
 \alias{sam_ibya}
 \title{sam_ibya}
 \usage{
-sam_ibya(fit, scale = 1)
+sam_ibya(fit, scale = 1, long = TRUE)
 }
 \arguments{
 \item{fit}{A "sam"-object}
 
 \item{scale}{A scaler (default 1)}
+
+\item{long}{A boolean indicating if returned table wide (default TRUE) variables
+as names within column 'var'. Alternative (FALSE) not yet active.}
 }
 \value{
 A tibble containing the following variables:
