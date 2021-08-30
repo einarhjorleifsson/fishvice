@@ -28,10 +28,10 @@ read_muppet <- function (path,
 
   # rbya ---
   rbya <-
-    read_tsv(file.path(path, "resultsbyyearandage"),
+    readr::read_tsv(file.path(path, "resultsbyyearandage"),
              na = c("-1", "0"))
   if(missing(assyear)) {
-    assyear <- rbya %>% filter(!is.na(ObsCno)) %>% pull(year) %>% max()
+    assyear <- rbya %>% dplyr::filter(!is.na(ObsCno)) %>% pull(year) %>% max()
     assyear <- assyear + 1
   }
 
@@ -43,7 +43,7 @@ read_muppet <- function (path,
 
   rbya <-
     rbya %>%
-    select(year, age,
+    dplyr::select(year, age,
            n = N,
            f = F,
            oC = ObsCno,
@@ -60,7 +60,7 @@ read_muppet <- function (path,
            rU2 = SurveyResiduals2,
            m = M,
            z = Z)  %>%
-    mutate(oC = oC / Scale,
+    dplyr::mutate(oC = oC / Scale,
            pC = pC  / Scale,
            cW = cW / Scale,
            sW = sW / Scale,
@@ -74,7 +74,7 @@ read_muppet <- function (path,
   #path <- "/net/hafkaldi.hafro.is/export/u2/reikn/Tac/2021/01/ass/mup/smx"
 
   # rby ---
-  rby <- read_tsv(file.path(path, "resultsbyyear"),
+  rby <- readr::read_tsv(file.path(path, "resultsbyyear"),
                   na = c("-1", "0"))
   nfleets <- (ncol(rby) - 14) / 2
   fleetnames <- as.character(1:nfleets)
@@ -92,7 +92,7 @@ read_muppet <- function (path,
 
   rby <-
     rby %>%
-    rename(r = Recruitment,
+    dplyr::rename(r = Recruitment,
            bio = RefBio2,
            ssb = Spawningstock,
            fbar = RefF,
@@ -105,16 +105,16 @@ read_muppet <- function (path,
            bio1 = RefBio1,
            bio2 = CbioR,
            eggp = Eggproduction) %>%
-    mutate(y = ifelse(is.na(oY), pY, oY),
+    dplyr::mutate(y = ifelse(is.na(oY), pY, oY),
            hr_old = y/bio,
            hr = (1/3 * y + 3/4 * lead(y)) / bio,
            #hr1 = y / bio1,
            #hr2 = y / bio2,
            r = r / Scale) %>%
-    select(year:fbar, hr, pY, oY, everything()) %>%
-    select(-y) %>%
+    dplyr::select(year:fbar, hr, pY, oY, everything()) %>%
+    dplyr::select(-y) %>%
     #select(year, bio, ssb, r, hr, fbar, oY)
-    mutate(run = run,
+    dplyr::mutate(run = run,
            model = "mup",
            assyear = assyear)
 
@@ -124,7 +124,7 @@ read_muppet <- function (path,
 
   # rba ---
   rba <-
-    read_tsv(file.path(path, "resultsbyage"),
+    readr::read_tsv(file.path(path, "resultsbyage"),
              na = c("-1", "0"))
   if (ncol(rba) != 10) {
     rba$cvU2 <- NA_real_
@@ -133,7 +133,7 @@ read_muppet <- function (path,
   }
   rba <-
     rba %>%
-    select(age,
+    dplyr::select(age,
            sel = meansel,
            pSel = progsel,
            cvC = SigmaC,
@@ -143,7 +143,7 @@ read_muppet <- function (path,
            cvU2 = SigmaSurvey2,
            qU2 = SurveylnQ2,
            pU2 = SurveyPower2) %>%
-    mutate(run = run,
+    dplyr::mutate(run = run,
            model = "mup",
            assyear = assyear)
 
@@ -166,7 +166,7 @@ read_muppet <- function (path,
 
   pth <- file.path(path, "muppet.std")
   if(file.exists(pth)) {# Better info about number of par
-    dat <- read.table(pth, header = T)
+    dat <- utils::read.table(pth, header = T)
     i <- c(grep("RefF", dat$name), grep("Spawningstock", dat$name))
     dat <- dat[-i,]
     j <- dat$std.dev < 50
