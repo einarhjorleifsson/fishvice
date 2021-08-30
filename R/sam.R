@@ -255,8 +255,10 @@ sam_fleets <- function(fit) {
 
 sam_partable <- function(fit) {
   lu <-
-    tibble::tribble(~name, ~par_conf,
+    tibble::tribble(#~name, ~par_conf,
+                    ~out_name, ~in_name,
                     "logFpar", "keyLogFpar",
+                    "logQpow", "keyQpow",
                     "logSdLogFsta","keyVarF", #
                     "logSdLogN", "keyVarLogN",
                     "logSdLogObs", "keyVarObs",
@@ -271,20 +273,20 @@ sam_partable <- function(fit) {
     tibble::as_tibble(rownames = "name") %>%
     janitor::clean_names() %>%
     dplyr::mutate(key = as.integer(stringr::str_replace(name, "^.+_", "")),
-                  name = stringr::str_sub(name, 1, nchar(name) - nchar(key) - 1)) %>%
-    dplyr::left_join(lu, by = "name") %>%
+                  out_name = stringr::str_sub(name, 1, nchar(name) - nchar(key) - 1)) %>%
+    dplyr::left_join(lu, by = "out_name") %>%
     dplyr::rename(sd = sd_par, est = exp_par) %>%
-    dplyr::left_join(sam_conf_tbl(fit),
-                     by = c("key", "par_conf")) %>%
+    dplyr::left_join(sam_conf_tbl(fit) %>% dplyr::rename(in_name = par_conf),
+                     by = c("key", "in_name")) %>%
     dplyr::left_join(sam_fleets(fit),
                      by = "fleet_nr") %>%
-    dplyr::mutate(what = dplyr::case_when(name == "logFpar" ~ "catchabilities",
-                            # NOTE: need to check output name
-                            name == "logSdLogObs" ~ "obsvar",
-                            name == "logSdLogN" ~ "process",
-                            par_conf == "keyQpow" ~ "powers",
-                            TRUE ~ "rest")) %>%
-    dplyr::select(fleet = fleet_name, age, m = par, cv = sd, est, low, high, what)
+    dplyr::mutate(what = dplyr::case_when(out_name == "logFpar" ~ "catchabilities",
+                                          out_name == "logQpow" ~ "powers",
+                                          # NOTE: need to check output name
+                                          out_name == "logSdLogObs" ~ "obsvar",
+                                          out_name == "logSdLogN" ~ "process",
+                                          TRUE ~ "rest")) %>%
+    dplyr::select(fleet = fleet_name, age, m = par, cv = sd, est, low, high, what, in_name, out_name)
 
 }
 
