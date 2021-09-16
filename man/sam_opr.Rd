@@ -4,12 +4,14 @@
 \alias{sam_opr}
 \title{Sam fit}
 \usage{
-sam_opr(fit, scale = 1)
+sam_opr(fit, scale = 1, run)
 }
 \arguments{
 \item{fit}{A "sam" object}
 
 \item{scale}{A scale for the scaleable variables}
+
+\item{run}{Name of the run}
 }
 \value{
 A list of length 2 containing the following:

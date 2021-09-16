@@ -4,12 +4,14 @@
 \alias{fv_opr}
 \title{Observed, predicted and residuals}
 \usage{
-fv_opr(o, scale = 1)
+fv_opr(o, scale = 1, run)
 }
 \arguments{
 \item{o}{An object of class sam, FLSAM or a directory path (for muppet)}
 
 \item{scale}{A scale for the scaleable variables}
+
+\item{run}{Name of the run}
 }
 \value{
 A tibble containing key metric by year

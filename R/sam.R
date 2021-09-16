@@ -21,6 +21,7 @@ sam_get_fit <- function(assessment) {
 #' @param scale A scaler (default 1)
 #' @param long A boolean indicating if returned table wide (default TRUE) variables
 #' as names within column 'var'. Alternative (FALSE) not yet active.
+#' @param run Name of the run
 #'
 #' @return A tibble containing the following variables:
 #' \itemize{
@@ -42,7 +43,7 @@ sam_get_fit <- function(assessment) {
 #'
 #'
 
-sam_ibya <- function(fit, scale = 1, long = TRUE) {
+sam_ibya <- function(fit, scale = 1, long = TRUE, run) {
 
   if(class(fit)[[1]] != "sam")
     stop('Object has to be of class "sam"')
@@ -78,6 +79,8 @@ sam_ibya <- function(fit, scale = 1, long = TRUE) {
     dplyr::full_join(lh(data$propM, pM), by = c("year", "age")) %>%
     dplyr::full_join(lh(data$stockMeanWeight, sW), by = c("year", "age"))
 
+  if(!missing(run)) d$run <- run
+
   return(d)
 
 }
@@ -97,6 +100,7 @@ sam_ibya <- function(fit, scale = 1, long = TRUE) {
 #' @param scale A scaler (default 1)
 #' @param long A boolean indicating if returned table wide (default TRUE) variables
 #' as names within column 'var'. Alternative (FALSE) not yet active.
+#' @param run Name of the run
 #'
 #' @return A tibble, containing at minimum:
 #' \itemize{
@@ -108,7 +112,7 @@ sam_ibya <- function(fit, scale = 1, long = TRUE) {
 #'
 #' @export
 #'
-sam_rbya <- function(fit, data = TRUE, scale = 1, long = TRUE) {
+sam_rbya <- function(fit, data = TRUE, scale = 1, long = TRUE, run) {
 
   nay <-
     stockassessment::ntable(fit) %>%
@@ -134,10 +138,14 @@ sam_rbya <- function(fit, data = TRUE, scale = 1, long = TRUE) {
   }
 
   if(long) {
-    res %>%
-      tidyr::gather(variable, val, -c(year, age)) %>%
-      return()
+    res <-
+      res %>%
+      tidyr::gather(variable, val, -c(year, age))
   }
+
+  if(!missing(run)) res$run <- run
+
+  return(res)
 
 }
 
@@ -147,6 +155,7 @@ sam_rbya <- function(fit, data = TRUE, scale = 1, long = TRUE) {
 #'
 #' @param fit XXX
 #' @param scale A scaler (default 1)
+#' @param run Name of the run
 #'
 #' @return A tibble containing the following variables:
 #' \itemize{
@@ -158,7 +167,7 @@ sam_rbya <- function(fit, data = TRUE, scale = 1, long = TRUE) {
 #' }
 #' @export
 #'
-sam_rby <- function(fit, scale = 1) {
+sam_rby <- function(fit, scale = 1, run) {
 
   lh <- function(x, variable, scale = 1) {
     x %>%
@@ -173,15 +182,19 @@ sam_rby <- function(fit, scale = 1) {
 
   }
 
-  dplyr::bind_rows(stockassessment::catchtable(fit) %>% lh("catch", scale = scale),
+  d <-
+    dplyr::bind_rows(stockassessment::catchtable(fit) %>% lh("catch", scale = scale),
                    stockassessment::rectable(fit)   %>% lh("rec", scale = scale),
                    stockassessment::ssbtable(fit)   %>% lh("ssb", scale = scale),
                    stockassessment::tsbtable(fit)   %>% lh("tsb", scale = scale),
                    stockassessment::fbartable(fit)  %>% lh("fbar")) %>%
     dplyr::rename(est = Estimate,
                   low = Low,
-                  high = High) %>%
-    return()
+                  high = High)
+
+  if(!missing(run)) d$run <- run
+
+  return(d)
 
 }
 
@@ -191,6 +204,7 @@ sam_rby <- function(fit, scale = 1) {
 #'
 #' @param fit A "sam" object
 #' @param scale A scale for the scaleable variables
+#' @param run Name of the run
 #'
 #' @return A list of length 2 containing the following:
 #' \itemize{
@@ -207,7 +221,7 @@ sam_rby <- function(fit, scale = 1) {
 #'
 #' @export
 #'
-sam_opr <- function(fit, scale = 1) {
+sam_opr <- function(fit, scale = 1, run) {
 
   # code from stockassessment
 
@@ -240,6 +254,8 @@ sam_opr <- function(fit, scale = 1) {
                    p = p) %>%
     dplyr::mutate(fleet = ifelse(fleet == "Residual catch", "catch", fleet))
 
+  if(!missing(run)) d$run <- run
+
   return(d)
 
 }
@@ -253,7 +269,7 @@ sam_fleets <- function(fit) {
     dplyr::mutate(fleet_name = ifelse(fleet_nr == 1, "catch", fleet_name))
 }
 
-sam_partable <- function(fit) {
+sam_partable <- function(fit, run) {
   lu <-
     tibble::tribble(#~name, ~par_conf,
                     ~out_name, ~in_name,
@@ -267,7 +283,8 @@ sam_partable <- function(fit) {
                     "logitReleaseSurvival", "",
                     "logitRecapturePhi", "")
 
-  fit %>%
+  d <-
+    fit %>%
     stockassessment:::partable() %>%
     as.data.frame() %>%
     tibble::as_tibble(rownames = "name") %>%
@@ -287,6 +304,10 @@ sam_partable <- function(fit) {
                                           out_name == "logSdLogN" ~ "process",
                                           TRUE ~ "rest")) %>%
     dplyr::select(fleet = fleet_name, age, m = par, cv = sd, est, low, high, what, in_name, out_name)
+
+  if(!missing(run)) d$run <- run
+
+  return(d)
 
 }
 

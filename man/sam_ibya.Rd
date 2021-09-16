@@ -4,7 +4,7 @@
 \alias{sam_ibya}
 \title{sam_ibya}
 \usage{
-sam_ibya(fit, scale = 1, long = TRUE)
+sam_ibya(fit, scale = 1, long = TRUE, run)
 }
 \arguments{
 \item{fit}{A "sam"-object}
@@ -13,6 +13,8 @@ sam_ibya(fit, scale = 1, long = TRUE)
 
 \item{long}{A boolean indicating if returned table wide (default TRUE) variables
 as names within column 'var'. Alternative (FALSE) not yet active.}
+
+\item{run}{Name of the run}
 }
 \value{
 A tibble containing the following variables:
