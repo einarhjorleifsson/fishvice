@@ -1,6 +1,6 @@
-## Fishvice
+## fishvice
 
-The concept:
+The concept is to turn objects from stock assessment packages (sam, flr's, muppet, ...) to tibbles for furher downstream tidyverse processing. A case in point:
 
 
 ```r
@@ -14,33 +14,33 @@ stockassessment::fitfromweb("BW-2021") %>%
 ## # A tibble: 205 × 5
 ##     year     est     low     high variable
 ##    <int>   <dbl>   <dbl>    <dbl> <chr>   
-##  1  1981 786019. 563267. 1096862. catch   
-##  2  1982 544005. 413227.  716172. catch   
-##  3  1983 511280. 394905.  661951. catch   
-##  4  1984 560898. 432736.  727017. catch   
-##  5  1985 637580. 500133.  812799. catch   
-##  6  1986 759587. 596212.  967730. catch   
-##  7  1987 638140. 501155.  812568. catch   
-##  8  1988 569424. 447817.  724054. catch   
-##  9  1989 619189. 490185.  782143. catch   
-## 10  1990 553357. 435295.  703440. catch   
+##  1  1981 786026. 563271. 1096875. catch   
+##  2  1982 544001. 413221.  716170. catch   
+##  3  1983 511286. 394907.  661961. catch   
+##  4  1984 560913. 432749.  727035. catch   
+##  5  1985 637584. 500137.  812804. catch   
+##  6  1986 759594. 596217.  967739. catch   
+##  7  1987 638131. 501148.  812557. catch   
+##  8  1988 569422. 447815.  724051. catch   
+##  9  1989 619197. 490191.  782154. catch   
+## 10  1990 553363. 435299.  703448. catch   
 ## # … with 195 more rows
 ## 
 ## $rbya
-## # A tibble: 410 × 14
-##     year   age       oC    cW    dW    lF    lW   mat     m    pF    pM    sW
-##    <dbl> <dbl>    <dbl> <dbl> <dbl> <int> <dbl> <dbl> <dbl> <int> <int> <dbl>
-##  1  1981     1  258000. 0.052 0.052     1 0.052  0.11   0.2     0     0 0.052
-##  2  1981     2  348000  0.065 0.065     1 0.065  0.4    0.2     0     0 0.065
-##  3  1981     3  681000  0.103 0.103     1 0.103  0.82   0.2     0     0 0.103
-##  4  1981     4  334000. 0.125 0.125     1 0.125  0.86   0.2     0     0 0.125
-##  5  1981     5  548000. 0.141 0.141     1 0.141  0.91   0.2     0     0 0.141
-##  6  1981     6  559000. 0.155 0.155     1 0.155  0.94   0.2     0     0 0.155
-##  7  1981     7  466000  0.17  0.17      1 0.17   1      0.2     0     0 0.17 
-##  8  1981     8  634000  0.178 0.178     1 0.178  1      0.2     0     0 0.178
-##  9  1981     9  578000  0.187 0.187     1 0.187  1      0.2     0     0 0.187
-## 10  1981    10 1460000. 0.213 0.213     1 0.213  1      0.2     0     0 0.213
-## # … with 400 more rows, and 2 more variables: n <dbl>, f <dbl>
+## # A tibble: 4,920 × 4
+##     year   age variable      val
+##    <dbl> <dbl> <chr>       <dbl>
+##  1  1981     1 oC        258000.
+##  2  1981     2 oC        348000 
+##  3  1981     3 oC        681000 
+##  4  1981     4 oC        334000.
+##  5  1981     5 oC        548000.
+##  6  1981     6 oC        559000.
+##  7  1981     7 oC        466000 
+##  8  1981     8 oC        634000 
+##  9  1981     9 oC        578000 
+## 10  1981    10 oC       1460000.
+## # … with 4,910 more rows
 ## 
 ## $opr
 ## # A tibble: 554 × 5
@@ -57,5 +57,21 @@ stockassessment::fitfromweb("BW-2021") %>%
 ##  9  1981     9 catch  13.3  13.0
 ## 10  1981    10 catch  14.2  13.9
 ## # … with 544 more rows
+## 
+## $par
+## # A tibble: 51 × 10
+##    fleet   age     m    cv       est       low      high what   in_name out_name
+##    <chr> <int> <dbl> <dbl>     <dbl>     <dbl>     <dbl> <chr>  <chr>   <chr>   
+##  1 IBWSS     1 -9.66 0.204 0.0000641 0.0000426 0.0000964 catch… keyLog… logFpar 
+##  2 IBWSS     2 -9.08 0.118 0.000114  0.0000901 0.000145  catch… keyLog… logFpar 
+##  3 IBWSS     3 -7.91 0.123 0.000367  0.000287  0.000469  catch… keyLog… logFpar 
+##  4 IBWSS     4 -7.31 0.111 0.000672  0.000538  0.000839  catch… keyLog… logFpar 
+##  5 IBWSS     5 -7.02 0.105 0.000890  0.000721  0.00110   catch… keyLog… logFpar 
+##  6 IBWSS     6 -7.02 0.105 0.000890  0.000721  0.00110   catch… keyLog… logFpar 
+##  7 IBWSS     7 -7.02 0.105 0.000890  0.000721  0.00110   catch… keyLog… logFpar 
+##  8 IBWSS     8 -7.02 0.105 0.000890  0.000721  0.00110   catch… keyLog… logFpar 
+##  9 catch     1 -1.01 0.135 0.363     0.277     0.476     rest   keyVarF logSdLo…
+## 10 catch     2 -1.01 0.135 0.363     0.277     0.476     rest   keyVarF logSdLo…
+## # … with 41 more rows
 ```
 
