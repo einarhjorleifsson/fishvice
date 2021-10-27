@@ -1,6 +1,6 @@
 ## fishvice
 
-The concept is to turn objects from stock assessment packages (sam, flr's, muppet, ...) to tibbles for furher downstream tidyverse processing. A case in point:
+The concept is to turn objects from stock assessment packages (sam, flr's, muppet, ...) to tibbles for further downstream tidyverse processing. A case in point:
 
 
 ```r
