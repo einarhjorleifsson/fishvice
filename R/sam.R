@@ -95,8 +95,6 @@ sam_ibya <- function(fit, scale = 1, long = TRUE, run) {
 #' @param fit A "sam" object
 #' @param data A boolean (default TRUE) specifying if input data should also
 #'             be returned.
-#' @param process A boolean (default FALSE), if TRUE returns a variable m2
-#' that is supposedly some kind of an indicator of the process error.
 #' @param scale A scaler (default 1)
 #' @param long A boolean indicating if returned table wide (default TRUE) variables
 #' as names within column 'var'. Alternative (FALSE) not yet active.
@@ -469,48 +467,56 @@ sam_process_residuals <- function(resp) {
 #'
 sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_group=TRUE) {
 
-  # dummy
-  n.d <- cW <- year <- z.d <- age <- b <- 0
+  last.true.age <- max(rbya$age) - plus_group
 
-  #
-  # align the year-classes
-  x <- rbya[,c("year","age","n")]
-  x$year <- x$year - 1
-  x$age <- x$age - 1
-  names(x)[3] <- "n.end"
-  d <- plyr::join(rbya[,c("year","age","n","m","f","oC", "cW")],x, by=c("year","age"))
-  d <- d[!is.na(d$n.end),]
-  # Note: could have a problem for the terminal year
-  d$f[is.na(d$f)] <- 0
+  # # align the year-classes
+  # x <- rbya[,c("year","age","n")]
+  # x$year <- x$year - 1
+  # x$age <- x$age - 1
+  # names(x)[3] <- "n.end"
+  # d <- plyr::join(rbya[,c("year","age","n","m","f","oC", "cW")],x, by=c("year","age"))
+  # d <- d[!is.na(d$n.end),]
+  # # Note: could have a problem for the terminal year
+  # d$f[is.na(d$f)] <- 0
+  # # exclude plus-group
+  # if(plus_group) d <- d[d$age < max(d$age),]
 
+  # # process error expressed as mortality
+  # d$z.n <- log(d$n/d$n.end)
+  # d$z.f <- d$f + d$m
+  # d$z.d  <- d$z.n - d$z.f
   #
-  # exclude plus-group
-  if(plus_group) d <- d[d$age < max(d$age),]
+  # # process error expressed as numbers
+  # d$n.end2 <- d$n * exp(-(d$f + d$m))
+  # # Calculate the difference
+  # d$n.d <- d$n.end - d$n.end2
+  d <-
+    rbya %>%
+    dplyr::mutate(yc = year - age) %>%
+    dplyr::group_by(yc) %>%
+                  # process error expressed as mortality
+    dplyr::mutate(z.d = log(n / dplyr::lead(n)) - (f + m),
+                  # process error expressed as numbers
+                  n.d = dplyr::lead(n) - (n * exp(-(f + m))),
+                  # process errror expressed as biomass
+                  b.d = n.d * cW) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(z.d = ifelse(age == last.true.age, NA, z.d),
+                  n.d = ifelse(age == last.true.age, NA, n.d),
+                  b.d = ifelse(age == last.true.age, NA, b.d))
 
-  #
-  # process error expressed as mortality
-  d$z.n <- log(d$n/d$n.end)
-  d$z.f <- d$f + d$m
-  d$z.d  <- d$z.n - d$z.f
-
-  #
-  # process error expressed as numbers
-  d$n.end2 <- d$n * exp(-(d$f + d$m))
-  # Calculate the difference
-  d$n.d <- d$n.end - d$n.end2
 
   #
   # process errror expressed as biomass
-  x <- plyr::ddply(d,c("year"),plyr::summarise,b=sum(n.d * cW,na.rm=TRUE))
   x <-
     d %>%
     dplyr::group_by(year) %>%
-    dplyr::summarise(b = sum(n.d * cW, na.rm = TRUE),
+    dplyr::summarise(b = sum(b.d, na.rm = TRUE),
                      y = sum(oC * cW, na.rm = TRUE))
 
   if(plot_it) {
     mort <-
-      ggplot2::ggplot(d,ggplot2::aes(year, z.d)) +
+      ggplot2::ggplot(d, ggplot2::aes(year, z.d)) +
       ggplot2::theme_bw() +
       ggplot2::geom_text(ggplot2::aes(label = age)) +
       ggplot2::stat_smooth(span = 0.1) +

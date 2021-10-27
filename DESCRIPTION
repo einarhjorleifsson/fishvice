@@ -16,6 +16,7 @@ Imports:
     magrittr,
     purrr,
     RCurl,
+    readr,
     stockassessment,
     stringr,
     tibble,

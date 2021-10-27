@@ -54,6 +54,7 @@ fv_opr <- function(o, scale = 1, run) {
 #' Parameters
 #'
 #' @param o An object of class sam, FLSAM or a directory path (for muppet)
+#' @param scale A scale for the scaleable variables
 #' @param run Name of the run
 #'
 #' @return A tibble containing key metrics

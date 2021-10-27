@@ -24,7 +24,8 @@ flr_rby <- function(fl, scale = 1, stk, des, long = TRUE) {
 #' @param scale A numeric, specifying re-scaling (default is 1). Not used (yet)
 #' @param stk Name of the run, if missing (default) will use the directory name
 #' or stock name if FL-object.
-#' @param dec desc if an FL-object
+#' @param des desc if an FL-object, if missing (default) will use the directory name
+#' or stock name if FL-object.
 #'
 #' @return A tibble containing key metrics by year and age
 #'

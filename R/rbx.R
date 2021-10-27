@@ -22,16 +22,23 @@ read_muppet <- function (path,
                          assyear)
 {
 
-  #if(!missing(run)) path <- file.path(path, name)
+  if(!dir.exists(path)) {
+    stop(paste0("File path: '", path, "' does not exist"))
+  }
 
   if(missing(run)) run <- basename(path)
+
+  if(!file.exists(file.path(path, "resultsbyyearandage"))) {
+    stop(paste0("File: '", file.path(path, "resultsbyyearandage"), "' does not exist"))
+  }
 
   # rbya ---
   rbya <-
     readr::read_tsv(file.path(path, "resultsbyyearandage"),
-             na = c("-1", "0"))
+                    na = c("-1", "0"),
+                    show_col_types = FALSE)
   if(missing(assyear)) {
-    assyear <- rbya %>% dplyr::filter(!is.na(ObsCno)) %>% pull(year) %>% max()
+    assyear <- rbya %>% dplyr::filter(!is.na(ObsCno)) %>% dplyr::pull(year) %>% max()
     assyear <- assyear + 1
   }
 
@@ -70,12 +77,16 @@ read_muppet <- function (path,
            assyear = assyear,
            yc = year - age)
 
-  # for testing
-  #path <- "/net/hafkaldi.hafro.is/export/u2/reikn/Tac/2021/01/ass/mup/smx"
 
   # rby ---
+
+  if(!file.exists(file.path(path, "resultsbyyear"))) {
+    stop(paste0("File: '", file.path(path, "resultsbyyear"), "' does not exist"))
+  }
+
   rby <- readr::read_tsv(file.path(path, "resultsbyyear"),
-                  na = c("-1", "0"))
+                         na = c("-1", "0"),
+                         show_col_types = FALSE)
   nfleets <- (ncol(rby) - 14) / 2
   fleetnames <- as.character(1:nfleets)
   txty <- paste(c("pU","oU"),c(matrix(fleetnames,2,length(fleetnames),byrow=T)),sep="")
@@ -83,12 +94,6 @@ read_muppet <- function (path,
   txta <- paste(c("cvU","qU","pU"),c(matrix(fleetnames,3,length(fleetnames),byrow=T)),sep="")
 
   names(rby)[15:ncol(rby)] <- txty
-
-  # dummies
-  #if (ncol(rby) != 18) {
-  #  rby$pU2 <- NA_real_
-  #  rby$oU2 <- NA_real_
-  #}
 
   rby <-
     rby %>%
@@ -107,7 +112,7 @@ read_muppet <- function (path,
            eggp = Eggproduction) %>%
     dplyr::mutate(y = ifelse(is.na(oY), pY, oY),
            hr_old = y/bio,
-           hr = (1/3 * y + 3/4 * lead(y)) / bio,
+           hr = (1/3 * y + 3/4 * dplyr::lead(y)) / bio,
            #hr1 = y / bio1,
            #hr2 = y / bio2,
            r = r / Scale) %>%
@@ -123,9 +128,15 @@ read_muppet <- function (path,
 
 
   # rba ---
+
+  if(!file.exists(file.path(path, "resultsbyage"))) {
+    stop(paste0("File: '", file.path(path, "resultsbyage"), "' does not exist"))
+  }
+
   rba <-
     readr::read_tsv(file.path(path, "resultsbyage"),
-             na = c("-1", "0"))
+                    na = c("-1", "0"),
+                    show_col_types = FALSE)
   if (ncol(rba) != 10) {
     rba$cvU2 <- NA_real_
     rba$qU2 <- NA_real_
