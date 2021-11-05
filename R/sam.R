@@ -15,7 +15,8 @@ sam_get_fit <- function(assessment) {
 
 #' @title sam_ibya
 #'
-#' @description sam input data as a tibble
+#' @description sam input data as a tibble. Note that "tuning" variables are
+#' not returned.
 #'
 #' @param fit A "sam"-object
 #' @param scale A scaler (default 1)
@@ -182,10 +183,10 @@ sam_rby <- function(fit, scale = 1, run) {
 
   d <-
     dplyr::bind_rows(stockassessment::catchtable(fit) %>% lh("catch", scale = scale),
-                   stockassessment::rectable(fit)   %>% lh("rec", scale = scale),
-                   stockassessment::ssbtable(fit)   %>% lh("ssb", scale = scale),
-                   stockassessment::tsbtable(fit)   %>% lh("tsb", scale = scale),
-                   stockassessment::fbartable(fit)  %>% lh("fbar")) %>%
+                     stockassessment::rectable(fit)   %>% lh("rec", scale = scale),
+                     stockassessment::ssbtable(fit)   %>% lh("ssb", scale = scale),
+                     stockassessment::tsbtable(fit)   %>% lh("tsb", scale = scale),
+                     stockassessment::fbartable(fit)  %>% lh("fbar")) %>%
     dplyr::rename(est = Estimate,
                   low = Low,
                   high = High)
@@ -270,16 +271,16 @@ sam_fleets <- function(fit) {
 sam_partable <- function(fit, run) {
   lu <-
     tibble::tribble(#~name, ~par_conf,
-                    ~out_name, ~in_name,
-                    "logFpar", "keyLogFpar",
-                    "logQpow", "keyQpow",
-                    "logSdLogFsta","keyVarF", #
-                    "logSdLogN", "keyVarLogN",
-                    "logSdLogObs", "keyVarObs",
-                    "transfIRARdist", "",
-                    "logitReleaseSurvival", "",
-                    "logitReleaseSurvival", "",
-                    "logitRecapturePhi", "")
+      ~out_name, ~in_name,
+      "logFpar", "keyLogFpar",
+      "logQpow", "keyQpow",
+      "logSdLogFsta","keyVarF", # sd random walk F
+      "logSdLogN", "keyVarLogN",
+      "logSdLogObs", "keyVarObs",
+      "transfIRARdist", "",
+      "logitReleaseSurvival", "",
+      "logitReleaseSurvival", "",
+      "logitRecapturePhi", "")
 
   d <-
     fit %>%
@@ -300,8 +301,19 @@ sam_partable <- function(fit, run) {
                                           # NOTE: need to check output name
                                           out_name == "logSdLogObs" ~ "obsvar",
                                           out_name == "logSdLogN" ~ "process",
+                                          out_name == "logSdLogFsta" ~ "rwalkF",
                                           TRUE ~ "rest")) %>%
     dplyr::select(fleet = fleet_name, age, m = par, cv = sd, est, low, high, what, in_name, out_name)
+
+  d <-
+    d %>%
+    dplyr::mutate(age2 = stringr::str_pad(age, 2, pad = "0"),
+                  fleet2 = stringr::str_sub(fleet, 1, 10),
+                  fleetage = dplyr::case_when(!is.na(fleet2) & !is.na(age2) ~ paste0(fleet2, "_", age2),
+                                              is.na(fleet2) & !is.na(age2) ~ age2,
+                                              is.na(fleet2) & is.na(age2) ~ out_name,
+                                              TRUE ~ NA_character_)) %>%
+    dplyr::select(-c(age2, fleet2))
 
   if(!missing(run)) d$run <- run
 
@@ -468,6 +480,8 @@ sam_process_residuals <- function(resp) {
 sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_group=TRUE) {
 
   last.true.age <- max(rbya$age) - plus_group
+  last.year <- max(rbya$year)
+
 
   # # align the year-classes
   # x <- rbya[,c("year","age","n")]
@@ -492,18 +506,22 @@ sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_grou
   # d$n.d <- d$n.end - d$n.end2
   d <-
     rbya %>%
-    dplyr::mutate(yc = year - age) %>%
+    dplyr::mutate(yc = year - age,
+                  f = replace_na(f, 0)) %>%
+    dplyr::arrange(yc, age) %>%
     dplyr::group_by(yc) %>%
-                  # process error expressed as mortality
-    dplyr::mutate(z.d = log(n / dplyr::lead(n)) - (f + m),
+    # process error expressed as mortality
+    dplyr::mutate(n.end = lead(n),
+                  z.d = log(n / dplyr::lead(n)) - (f + m),
                   # process error expressed as numbers
                   n.d = dplyr::lead(n) - (n * exp(-(f + m))),
                   # process errror expressed as biomass
                   b.d = n.d * cW) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(z.d = ifelse(age == last.true.age, NA, z.d),
-                  n.d = ifelse(age == last.true.age, NA, n.d),
-                  b.d = ifelse(age == last.true.age, NA, b.d))
+    dplyr::mutate(z.d = ifelse(age >= last.true.age, NA, z.d),
+                  n.d = ifelse(age >= last.true.age, NA, n.d),
+                  b.d = ifelse(age >= last.true.age, NA, b.d)) %>%
+    arrange(year, age)
 
 
   #
