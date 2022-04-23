@@ -10,3 +10,13 @@ populate
 *.html
 docs
 einarhj_webupdate.R
+inst/mup/Files
+inst/mup/smx/muppet*
+inst/mup/smx/*.log
+inst/mup/smx/*.dat
+inst/mup/smx/*.DAT
+inst/mup/smx/*.cov
+inst/mup/smx/*.dep
+inst/mup/smx/*.hes
+inst/mup/smx/README
+inst/mup/smx/icecod*

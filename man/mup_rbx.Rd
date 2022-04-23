@@ -27,5 +27,4 @@ reads muppet results
 }
 \examples{
 rbx <- mup_rbx(path = system.file("mup/smx", package = "fishvice"), scale = 1000)
-names(rbx)
 }
