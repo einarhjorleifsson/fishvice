@@ -3,3 +3,6 @@
 populate
 data-raw
 R-construction
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
