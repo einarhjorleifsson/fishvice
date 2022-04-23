@@ -6,3 +6,4 @@ R-construction
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+einarhj_webupdate.R

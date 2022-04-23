@@ -1,13 +1,12 @@
 ---
-title: "Fishvice"
-output: 
-  html_document: 
-    keep_md: yes
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+## Fishvice 
 
 The concept is to turn objects from stock assessment packages (sam, flr's, muppet, ...) to tibbles for further downstream tidyverse processing. A case in point:
 
