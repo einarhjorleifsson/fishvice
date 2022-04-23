@@ -1,5 +1,5 @@
 ---
-title: "muppet"
+title: "sam"
 ---
 
 ```{r, include = FALSE}
@@ -13,7 +13,12 @@ knitr::opts_chunk$set(
 ```
 
 ```{r}
+library(tidyverse)
 library(fishvice)
-mup_rbx(system.file("mup/smx", package = "fishvice"))
+```
+
+```{r}
+fit <- sam_get_fit("BW-2021")
+rbx <- fv_rbx(fit)
 ```
 

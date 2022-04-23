@@ -11,15 +11,15 @@
 #'
 #' @param path A directory path
 #' @param scale A scaler (default 1)
-#' @param long A boolean indicating if returned table long (default TRUE) with variables
-#' as names within column 'var' and values in column 'val'. Alternative (FALSE) not yet active.
-#' @param run Name of the run, if missing (default) will use the directory name
 #' @param assyear Assessment year, if missing (default) will use the year after the last
 #' catch at age input
+#' @param run Name of the run, if missing (default) will use the directory name
+#' @param wide A boolean indicating if returned table wide (default TRUE). If FALSE variable are
+#' return within column 'var' and values in column 'val'.
 #'
 #' @return A tibble
 
-mup_rbya <- function(path, scale = 1, long = TRUE, run, assyear) {
+mup_rbya <- function(path, scale = 1, assyear, run, wide = TRUE)  {
 
   if(!dir.exists(path)) {
     stop(paste0("File path: '", path, "' does not exist"))
@@ -70,13 +70,14 @@ mup_rbya <- function(path, scale = 1, long = TRUE, run, assyear) {
                   pC = pC  / scale,
                   cW = cW / scale,
                   sW = sW / scale,
+                  ssbW = ssbW / scale,
                   n = n / scale,
                   run = run,
                   model = "mup",
                   assyear = assyear,
                   yc = year - age)
 
-  if(long) {
+  if(!wide) {
     rbya <-
       rbya %>%
       dplyr::select(-c(pC, rC, oU1, oU2, pU1, pU2, rU1, rU2)) %>%
@@ -89,7 +90,7 @@ mup_rbya <- function(path, scale = 1, long = TRUE, run, assyear) {
 }
 
 
-mup_rby <- function(fit, scale = 1, run, assyear) {
+mup_rby <- function(path, scale = 1, assyear, run) {
 
   if(!dir.exists(path)) {
     stop(paste0("File path: '", path, "' does not exist"))
@@ -182,4 +183,35 @@ mup_rba <- function(path, run) {
   return(rba)
 
 }
+
+#' @title muppet_rbx
+#'
+#' @description reads muppet results
+#'
+#' @param path A directory path
+#' @param scale A scaler (default 1)
+#' @param assyear Assessment year, if missing (default) will use the year after the last
+#' catch at age input
+#' @param run Name of the run, if missing (default) will use the directory name
+#' @param wide A boolean indicating if returned table wide (default TRUE). If FALSE variable are
+#' return within column 'var' and values in column 'val'.
+#'
+#' @return A tibble
+#'
+#' @export
+#'
+#' @examples
+#' rbx <- mup_rbx(path = system.file("mup/smx", package = "fishvice"), scale = 1000)
+mup_rbx <- function(path, scale = 1, assyear, run, wide = TRUE) {
+
+  if(!dir.exists(path)) {
+    stop(paste0("File path: '", path, "' does not exist"))
+  }
+
+  list(rby  = mup_rby(path, scale, assyear, run),
+       rbya = mup_rbya(path, scale, assyear, run, wide),
+       rba  = mup_rba(path, run))
+
+}
+
 

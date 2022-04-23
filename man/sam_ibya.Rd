@@ -34,5 +34,6 @@ A tibble containing the following variables:
 }
 }
 \description{
-sam input data as a tibble
+sam input data as a tibble. Note that "tuning" variables are
+not returned.
 }

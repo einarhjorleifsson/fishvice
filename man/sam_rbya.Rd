@@ -18,9 +18,6 @@ be returned.}
 as names within column 'var'. Alternative (FALSE) not yet active.}
 
 \item{run}{Name of the run}
-
-\item{process}{A boolean (default FALSE), if TRUE returns a variable m2
-that is supposedly some kind of an indicator of the process error.}
 }
 \value{
 A tibble, containing at minimum:

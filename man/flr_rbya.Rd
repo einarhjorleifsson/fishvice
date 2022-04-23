@@ -14,7 +14,8 @@ flr_rbya(fl, scale = 1, stk, des)
 \item{stk}{Name of the run, if missing (default) will use the directory name
 or stock name if FL-object.}
 
-\item{dec}{desc if an FL-object}
+\item{des}{desc if an FL-object, if missing (default) will use the directory name
+or stock name if FL-object.}
 }
 \value{
 A tibble containing key metrics by year and age

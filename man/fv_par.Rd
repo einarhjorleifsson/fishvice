@@ -9,6 +9,8 @@ fv_par(o, scale = 1, run)
 \arguments{
 \item{o}{An object of class sam, FLSAM or a directory path (for muppet)}
 
+\item{scale}{A scale for the scaleable variables}
+
 \item{run}{Name of the run}
 }
 \value{
