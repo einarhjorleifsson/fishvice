@@ -223,7 +223,7 @@ mup_std <- function(path) {
 }
 
 
-mup_par <- function(path) {
+mup_par <- function(path, run) {
 
   if(file.exists(paste0(path, "/muppet.par"))) {
     fil <- paste0(path, "/muppet.par")
