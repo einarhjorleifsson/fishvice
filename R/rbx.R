@@ -116,7 +116,7 @@ read_muppet <- function (path,
            #hr1 = y / bio1,
            #hr2 = y / bio2,
            r = r / Scale) %>%
-    dplyr::select(year:fbar, hr, pY, oY, everything()) %>%
+    dplyr::select(year:fbar, hr, pY, oY, dplyr::everything()) %>%
     dplyr::select(-y) %>%
     #select(year, bio, ssb, r, hr, fbar, oY)
     dplyr::mutate(run = run,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/muppet.R
 \name{mup_rbx}
 \alias{mup_rbx}
-\title{muppet_rbx}
+\title{muppetrbx}
 \usage{
 mup_rbx(path, scale = 1, assyear, run, wide = TRUE)
 }

@@ -507,11 +507,11 @@ sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_grou
   d <-
     rbya %>%
     dplyr::mutate(yc = year - age,
-                  f = replace_na(f, 0)) %>%
+                  f = tidyr::replace_na(f, 0)) %>%
     dplyr::arrange(yc, age) %>%
     dplyr::group_by(yc) %>%
     # process error expressed as mortality
-    dplyr::mutate(n.end = lead(n),
+    dplyr::mutate(n.end = dplyr::lead(n),
                   z.d = log(n / dplyr::lead(n)) - (f + m),
                   # process error expressed as numbers
                   n.d = dplyr::lead(n) - (n * exp(-(f + m))),
@@ -521,7 +521,7 @@ sam_process_error <- function(rbya, plot_it=FALSE, plot_catch = FALSE, plus_grou
     dplyr::mutate(z.d = ifelse(age >= last.true.age, NA, z.d),
                   n.d = ifelse(age >= last.true.age, NA, n.d),
                   b.d = ifelse(age >= last.true.age, NA, b.d)) %>%
-    arrange(year, age)
+    dplyr::arrange(year, age)
 
 
   #

@@ -7,3 +7,4 @@ R-construction
 ^docs$
 ^pkgdown$
 einarhj_webupdate.R
+README.Rmd

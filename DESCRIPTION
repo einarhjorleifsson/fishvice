@@ -12,11 +12,13 @@ Depends:
 Imports:
     dplyr,
     ggplot2,
+    gridExtra,
     janitor,
     magrittr,
     purrr,
     RCurl,
     readr,
+    reshape2,
     stockassessment,
     stringr,
     tibble,

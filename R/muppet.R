@@ -1,8 +1,12 @@
+# NOTE: HOSKI read_separ1 at the bottom of file
 # TODO
 #  * Get pM and pF for mup_rbya - ideally this should be returned by muppet in
 #    resultsbyyearandage
-#  * Question what to do about ssbW vs sW, the latter is used in the sam returns
+#  * Implement HOSKI
+#              Including retro
+#  * Question what to do about ssbW vs sW, the is used in the sam returns
 #    for SSB weights.
+
 
 
 #' @title muppet_rbya
@@ -88,6 +92,24 @@ mup_rbya <- function(path, scale = 1, assyear, run, wide = TRUE)  {
   return(rbya)
 
 }
+
+mup_opr <- function(path, run, log = TRUE, sur = c("smb", "smh")) {
+  if(!dir.exists(path)) {
+    stop(paste0("File path: '", path, "' does not exist"))
+  }
+  d <- mup_rbya(path, run = run)
+  d <-
+    dplyr::bind_rows(
+      d %>% dplyr::select(year, age, o =  oC, p =  pC, r =  rC) %>% dplyr::mutate(var = "catch"),
+      d %>% dplyr::select(year, age, o = oU1, p = pU1, r = rU1) %>% dplyr::mutate(var = sur[1]),
+      d %>% dplyr::select(year, age, o = oU2, p = pU2, r = rU2) %>% dplyr::mutate(var = sur[2])
+    ) %>%
+    dplyr::mutate(o = log(o),
+                  p = log(p),
+                  run = d$run[1])
+  return(d)
+}
+
 
 
 mup_rby <- function(path, scale = 1, assyear, run) {
@@ -181,10 +203,81 @@ mup_rba <- function(path, run) {
                   model = "mup")
 
   return(rba)
-
 }
 
-#' @title muppet_rbx
+mup_std <- function(path) {
+
+  if(!dir.exists(path)) {
+    stop(paste0("File path: '", path, "' does not exist"))
+  }
+
+  if(file.exists(paste0(path, "/muppet.par"))) {
+    d <-
+      utils::read.table(paste0(path, "/muppet.std"), header = TRUE) %>%
+      tibble::as_tibble()
+    return(d)
+  }
+
+  # NOTE: function returns NULL if muppet.par does not exist
+}
+
+
+mup_par <- function(path) {
+
+  if(file.exists(paste0(path, "/muppet.par"))) {
+    fil <- paste0(path, "/muppet.par")
+  } else {
+  }
+
+  x <- readr::read_lines(fil)
+  head <- x[1]
+  head <-   stringr::str_split(head, " ")[[1]]
+  head <- head[c(6, 11, 17)] %>% stringr::str_trim() %>% as.numeric()
+  names(head) <- c("npar", "objective", "max_gradient")
+
+  idx <- grep("#", x)
+  N <- length(idx)
+  res <- list()
+  for(i in 1:N) {
+    if(i == 1) {
+      res[[i]] <- head
+    } else {
+      if(i < N) {
+        i1 <- idx[i] + 1
+        i2 <- idx[i + 1] - 1
+        res[[i]] <-
+          x[i1:i2] %>%
+          stringr::str_trim() %>%
+          stringr::str_split(" ", simplify = TRUE)
+        nr <- nrow(res[[i]])
+        if(nr > 1) {
+          res[[i]] <-
+            res[[i]] %>%
+            as.numeric() %>%
+            matrix(nrow = nr)
+        } else {
+          res[[i]] <-
+            res[[i]] %>%
+            as.numeric()
+        }
+
+      } else {
+        res[[i]] <- x[N] %>% as.numeric()
+      }
+    }
+  }
+  names(res) <-
+    c("obj", x[idx[-1]]) %>%
+    stringr::str_replace_all("#", "") %>%
+    stringr::str_replace(":", "") %>%
+    stringr::str_replace("\\[", "") %>%
+    stringr::str_replace("\\]", "") %>%
+    stringr::str_trim()
+
+  return(res)
+}
+
+#' @title muppetrbx
 #'
 #' @description reads muppet results
 #'
@@ -210,8 +303,206 @@ mup_rbx <- function(path, scale = 1, assyear, run, wide = TRUE) {
 
   list(rby  = mup_rby(path, scale, assyear, run),
        rbya = mup_rbya(path, scale, assyear, run, wide),
-       rba  = mup_rba(path, run))
+       rba  = mup_rba(path, run),
+       opr  = mup_opr(path, run),
+       std  = mup_std(path),
+       par  = mup_par(path))
 
 }
 
+
+# HOSKI ------------------------------------------------------------------------
+# Hér sérðu dæmi um nýja read_separ (read_separ1) í bili
+# notkun á því og útkomu.
+# res <- read_separ1(".",".",fleetnames=c("3","1","2","4"),assYear=year+1)
+#
+# Floti 1 er alltaf mars survey , 2 er haustrall 3 er marssurvey 1-2 og 4 haustrall12 það er út af þessu logq1 dæmi
+#
+# Við höldum alltaf þessum nöfnum þ.a í haustrallkeyrslu er bara oU2 og pU2 ekki oU1 og pU1.
+#
+# Ef vilja hafa þetta öðruvísi er defaultið að númera flotanna í vaxandi röð.
+# read_separ1 <- function (path, run, rName = NA, mName = NA, calcSurBio = F,
+#                          ggFactor = T, Scale = 1000, assYear = NA, retroY = NA,fleetnames)
+# {
+#   if(file.exists("muppet.par")){ # get AIC could look for as.numeric=T
+#     dat <- scan("muppet.par",what=character(),sep=" ",quiet=T)[1:12]
+#     aicinfo <- as.numeric(c(dat[6],dat[11]))
+#     names(aicinfo) <- c("npar","objective")
+#
+#     dat <- scan("muppet.par",what=character(),sep="\n",quiet=T)
+#     i <- grep("# surveybiopow",dat)
+#     surveybiopow <- as.numeric(dat[i+1])
+#   }
+#
+#
+#
+#   if(missing(fleetnames)){ # to have some default
+#     # Test number of columns
+#     if (is.na(retroY))
+#       rby <- read.table(paste(path, run, "resultsbyyear", sep = "/"),
+#                         header = T, na.strings = c("-1", "0"))
+#     if (!is.na(retroY))
+#       rby <- read.table(paste(paste(path, run, "resultsbyyear",
+#                                     sep = "/"), retroY, sep = ""),
+#                         header = T, na.strings = c("-1", "0"))
+#     nfleets <- (ncol(rby)-14)/2
+#     fleetnames <- as.character(1:nfleets)
+#   }
+#   txty <- paste(c("oU","pU"),c(matrix(fleetnames,2,length(fleetnames),byrow=T)),sep="")
+#   cnRby <- c("year", "r", "n3", "n6", "bioF", "bio", "bio1",
+#              "ssb", "ssb2", "fbar", "hr", "oY", "pY",txty,"run", "model")
+#   txtya <- paste(c("oU","pU","rU"),c(matrix(fleetnames,3,length(fleetnames),byrow=T)),sep="")
+#   cnRbya <- c("year", "age", "oC", "cW", "sW", "ssbW", "mat",
+#               "n", "z", "f", "m", "pC", "rC",txtya)
+#   txta<- paste(c("cvU","qU","pU"),c(matrix(fleetnames,3,length(fleetnames),byrow=T)),sep="")
+#
+#   cnRba <- c("age", "sel", "pSel", "sigma", txta, "run", "model")
+#   if (is.na(retroY))
+#     rby <- read.table(paste(path, run, "resultsbyyear", sep = "/"),
+#                       header = T, na.strings = c("-1", "0"))
+#   if (!is.na(retroY)) {
+#     rby <- read.table(paste(paste(path, run, "resultsbyyear",
+#                                   sep = "/"), retroY, sep = ""), header = T, na.strings = c("-1",
+#                                                                                             "0"))
+#   }
+#   n <- nrow(rby)
+#   if (ncol(rby) != 18) {
+#     rby$pU2 <- rep(NA, n)
+#     rby$oU2 <- rep(NA, n)
+#   }
+#   names(rby) <- c("year", "fbar", "pY", "oY", "ssb", "ssb2",
+#                   "bioF", "bio1", "bio", "preR", "r", "n1", "n3", "n6",
+#                   txty)
+#   if (ggFactor)
+#     rby$r <- rby$r * exp(-0.4)
+#   rby$hr <- ifelse(!is.na(rby$oY), rby$oY, rby$pY)/rby$bio
+#   rby$run <- rName
+#   rby$model <- mName
+#   rby <- rby[, cnRby]
+#   rby$r <- rby$r/Scale
+#   rby$n3 <- rby$n3/Scale
+#   rby$n6 <- rby$n6/Scale
+#   if (is.na(retroY))
+#     rbya <- read.table(paste(path, run, "resultsbyyearandage",
+#                              sep = "/"), header = T, na.strings = c("-1", "0"))
+#   if (!is.na(retroY)) {
+#     rbya <- read.table(paste(paste(path, run, "resultsbyyearandage",
+#                                    sep = "/"), retroY, sep = ""), header = T, na.strings = c("-1",
+#                                                                                              "0"))
+#   }
+#   n <- nrow(rby)
+#   names(rbya) <- c("year", "age", "n", "z", "sW", "m", "f",
+#                    "pC", "cW", "ssbW", "mat", "oC", "rC",txtya)
+#   if (ggFactor)
+#     rbya$n <- ifelse(rbya$age %in% 1, rbya$n * exp(-0.4),
+#                      rbya$n)
+#   if (ggFactor)
+#     rbya$n <- ifelse(rbya$age %in% 2, rbya$n * exp(-0.2),
+#                      rbya$n)
+#   rbya <- rbya[, cnRbya]
+#   rbya$run <- rName
+#   rbya$model <- mName
+#   rbya$oC <- rbya$oC/Scale
+#   rbya$cW <- rbya$cW/Scale
+#   rbya$sW <- rbya$sW/Scale
+#   rbya$n <- rbya$n/Scale
+#   rbya$pC <- rbya$pC/Scale
+#   if (is.na(retroY))
+#     rba <- read.table(paste(path, run, "resultsbyage", sep = "/"),
+#                       header = T, na.strings = c("-1", "0"))
+#   if (!is.na(retroY)) {
+#     rba <- read.table(paste(paste(path, run, "resultsbyage",
+#                                   sep = "/"), retroY, sep = ""), header = T, na.strings = c("-1",
+#                                                                                             "0"))
+#   }
+#   n <- nrow(rba)
+#   names(rba) <- c("age", "sel", "pSel", "sigma", txta)
+#   rba$run <- rName
+#   rba$model <- mName
+#   rba <- rba[, cnRba]
+#   if (!is.na(retroY)) {
+#     print(retroY)
+#     rby$assYear <- as.numeric(retroY) + 1
+#     rbya$assYear <- as.numeric(retroY) + 1
+#     rba$assYear <- as.numeric(retroY) + 1
+#   }
+#   else {
+#     rby$assYear <- assYear
+#     rbya$assYear <- assYear
+#     rba$assYear <- assYear
+#   }
+#   if(exists("surveybiopow")){
+#     names(surveybiopow) <- fleetnames
+#     return(list(rby = rby, rbya = rbya, rba = rba,aicinfo=aicinfo,surveybiopow=surveybiopow))
+#   }
+#   else
+#     return(list(rby = rby, rbya = rbya, rba = rba)) # no muppet.par
+# }
+#
+# # retro example ----------------------------------------------------------------
+# source("readSepar.r")
+# library(stringr)
+# library(tidyverse)
+#
+# Changepinfile <- function(file="muppet.par",txt = c("# lnRecr:","# lnEffort:"),outputfile="muppet.pin") {
+#   dat <- scan(file,what=character(),sep="\n",quiet=TRUE)
+#   for(k in 1:length(txt)){
+#     j <- grep(txt[k],dat)
+#     if(length(j) > 0) {
+#       k1 <- unlist(str_locate_all(dat[j+1]," "))
+#       dat[j+1]  <- substring(dat[j+1],1,k1[length(k1)]-1)
+#     }
+#   }
+#   write.table(dat,file=outputfile,row.names=FALSE,col.names=FALSE,sep="\n",quote=F)
+# }
+#
+# Replace <- function(txt,parameter,pattern){
+#   if(!missing(parameter)){
+#     i <- grep(pattern,txt)
+#     if(!any(i)){
+#       print(paste("   ",pattern,"   ","does not exist"))
+#       break()
+#     }
+#     txt[i] <- paste(as.character(parameter),"\t",pattern)
+#   }
+#   return(txt)
+# }
+# rby <- rbya <- rba <- aicinfo <- surveybiopow <-  list()
+# PIN <- TRUE
+#
+# inputfile <- "icecod.dat.opt.final"
+# for(year in c(2019:2001)){
+#   print(year)
+#   assyear <- year+1
+#   txt <- readLines(inputfile)
+#   txt <- Replace(txt,year,'# Last opt year')
+#   txt <- Replace(txt,min(c(year+2,2019)),'# Last data year')
+#
+#   if(PIN && (year != 2019))Changepinfile("muppet.par",txt = c("# lnRecr:","# lnEffort:"),outputfile="muppet.pin")
+#   write.table(txt,file="icecod.dat.opt",sep="\n",row.names=F,quote=F,col.names=F)
+#   system("muppet -nox -ind icecod.dat.opt > /dev/null")
+#   res <- read_separ1(".",".",fleetnames=c("3","1","2","4"),assYear=year+1)
+#   rby[[as.character(assyear)]] <- res$rby
+#   rbya[[as.character(assyear)]] <- res$rbya
+#   rba[[as.character(assyear)]] <- res$rba
+#   aicinfo[[as.character(assyear)]] <- res$aicinfo
+#   surveybiopow[[as.character(assyear)]] <- res$surveybiopow
+#
+#
+#   # Those mv are really not needed but we do at least to remove the files.
+#   system(paste("mv resultsbyyear tmpresults/resultsbyyear",year,sep=""))
+#   system(paste("mv resultsbyyearandage tmpresults/resultsbyyearandage",year,sep=""))
+#   system(paste("mv resultsbyage tmpresults/resultsbyage",year,sep=""))
+# }
+#
+# rby <- bind_rows(rby)
+# rbya <- bind_rows(rbya)
+# rba <- bind_rows(rba)
+# aicinfo <- bind_rows(aicinfo)
+# aicinfo$assYear <- unique(rby$assYear)
+# surveybiopow <- bind_rows(surveybiopow)
+# surveybiopow$assYear <- unique(rby$assYear)
+#
+# save(list=c("rby","rbya","rba","aicinfo","surveybiopow"),file="retro.rdata")
+#
 
