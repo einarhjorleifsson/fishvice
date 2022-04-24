@@ -1,11 +1,12 @@
-# NOTE: HOSKI read_separ1 at the bottom of file
 # TODO
 #  * Get pM and pF for mup_rbya - ideally this should be returned by muppet in
 #    resultsbyyearandage
-#  * Implement HOSKI
-#              Including retro
+#  * mup_rbx - RETRO
 #  * Question what to do about ssbW vs sW, the is used in the sam returns
 #    for SSB weights.
+# check if one can not do something like this, or better still include
+#  this type of thing in a xxxx.sh file within the package
+# system("nohup ./muppet -nox -ind icecod.dat.opt -mcmc 500000 -mcscale -mcsave 1000 &")
 
 
 
@@ -276,6 +277,92 @@ mup_par <- function(path) {
 
   return(res)
 }
+
+#' Reads ADMB hst files
+#'
+#' Reads output of ADMB MCMC report containing estimated distributions. The .hst
+#' report contains information about the MCMC analysis: the sample sizes
+#' (specied with the -mcmc command-line option), the step size scaling
+#' factor, the step sizes, and information about the posterior probability
+#' distribution (e.g., the mean, standard deviation, and lower and upper
+#' bounds). For each simulated parameter, a range of values (with step sizes
+#' reported in the "step sizes" section of the .hst file) and their simulated
+#' posterior probabilities is reported. Plotting the first column
+#' (parameter values) on the x-axis and the second column (simulated
+#' probabilities) on the y-axis can be a convenient way to make a visualization
+#' of the posterior probability distribution.
+#'
+#' @param path Name of the \emph{directory} that contains the result.
+#' @param txt The parameters to extract
+#' @param startyear Assessment start year
+#' @param names A character vector of length two replacing the default names
+#' \emph{c('value','prop')}
+#' @param negative.allowed Flag, default is FALSE
+#'
+#' @return A list, each component being a dataframe with two columns. The
+#' default names are \emph{c('value','prop')} which can be replace by specifying
+#' \emph{names}.
+mup_hst <- function (path, txt, startyear = 1955, names, negative.allowed = FALSE) {
+  file <- paste(path, "muppet.hst", sep = "/")
+  tmpskra <- tempfile("bayes")
+  on.exit(unlink(tmpskra))
+  tmp <- scan(file, what = character(), sep = "\n", quiet = TRUE)
+  tmp1 <- matrix(tmp, length(tmp), 1)
+  utils::write.table(tmp1, file = tmpskra, sep = "", col.names = F,
+                     row.names = F, quote = F)
+  i <- grep(txt, tmp)
+  j <- grep("#", tmp)
+  j <- j[j > i[length(i)]]
+
+  if (length(j) > 0) {
+    j <- j[1] - 1
+  } else {
+    j <- length(tmp)
+  }
+
+  i1 <- i[1:(length(i))] + 1
+  i2 <- c(i[2:length(i)] - 1, j)
+
+  if (length(i) == 1)  i2 <- j
+
+  Result <- list()
+  for (i in 1:length(i1)) {
+    #print(i)
+    x <- getlineswin(tmpskra, i1[i], i2[i])
+    names(x) <- c('value','prop')
+    if (!negative.allowed) x <- x[x$value >= 0, ]
+    Result[[i]] <- getlineswin(tmpskra, i1[i], i2[i])
+    names(Result[[i]]) <- c('value','prob')
+    #Result[[i]] <- calcprofile(Result[[i]], negative.allowed = negative.allowed)
+  }
+  if (!missing(startyear)) {
+    names(Result) <- paste((startyear:(startyear + length(Result) - 1)),
+                           sep = "")
+    #attributes(Result)$years <- startyear:(startyear + length(Result) -                                          1)
+  }
+  # if (!missing(names)) names(Result) <- names
+  # if (length(Result) == 1) Result <- Result[[1]]
+  Result <-
+    dplyr::bind_rows(Result, .id = "year") %>%
+    tibble::as_tibble() %>%
+    mutate(year = as.integer(year))
+
+  return(Result)
+}
+
+
+getlineswin <- function (file, line1, line2) {
+  tmpskra <- tempfile("bayes")
+  on.exit(unlink(tmpskra))
+  #if (missing(nlines)) nlines <- length(count.fields(file, sep = "\n"))
+  x <- scan(file, sep = "\t", what = character(), quiet = TRUE)
+  x <- matrix(x, length(x), 1)
+  x <- x[line1:line2, ]
+  utils::write.table(x, file = tmpskra, sep = "\n", col.names = F,
+                     row.names = F, quote = F)
+  return(utils::read.table(tmpskra))
+}
+
 
 #' @title muppetrbx
 #'
