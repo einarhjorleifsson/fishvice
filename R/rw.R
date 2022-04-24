@@ -1,9 +1,9 @@
-#' @title get_file
-#'
-#' @description Gets a file from the web.
-#'
-#' @param URL URL path
-#' @param File Name of the file
+# #' @title get_file
+# #'
+# #' @description Gets a file from the web.
+# #'
+# #' @param URL URL path
+# #' @param File Name of the file
 get_file <- function(URL,File)
 {
   temporaryFile <- tempfile()

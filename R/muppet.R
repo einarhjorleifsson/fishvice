@@ -10,19 +10,19 @@
 
 
 
-#' @title muppet_rbya
-#'
-#' @description reads muppet year-and-age input and output
-#'
-#' @param path A directory path
-#' @param scale A scaler (default 1)
-#' @param assyear Assessment year, if missing (default) will use the year after the last
-#' catch at age input
-#' @param run Name of the run, if missing (default) will use the directory name
-#' @param wide A boolean indicating if returned table wide (default TRUE). If FALSE variable are
-#' return within column 'var' and values in column 'val'.
-#'
-#' @return A tibble
+# #' @title muppet_rbya
+# #'
+# #' @description reads muppet year-and-age input and output
+# #'
+# #' @param path A directory path
+# #' @param scale A scaler (default 1)
+# #' @param assyear Assessment year, if missing (default) will use the year after the last
+# #' catch at age input
+# #' @param run Name of the run, if missing (default) will use the directory name
+# #' @param wide A boolean indicating if returned table wide (default TRUE). If FALSE variable are
+# #' return within column 'var' and values in column 'val'.
+# #'
+# #' @return A tibble
 
 mup_rbya <- function(path, scale = 1, assyear, run, wide = TRUE)  {
 
@@ -364,7 +364,7 @@ getlineswin <- function (file, line1, line2) {
 }
 
 
-#' @title muppetrbx
+#' @title read muppet output
 #'
 #' @description reads muppet results
 #'

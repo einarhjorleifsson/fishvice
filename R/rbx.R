@@ -1,3 +1,4 @@
+# NOTE: fucntion in muppet.R will superseed this one
 # TODO
 #      calculate and return standardized residuals
 #      question if one should not return opr-tibble, aka what is done for sam
@@ -5,17 +6,16 @@
 #      return all par estimates?
 
 
-#' read muppet output
-#'
-#' @param path A vector containing the path to the assessment directory
-#' @param Scale A numeric, specifying rescaling (default is 1)
-#' @param run  Name of the run, if missing (default) will use the directory name
-#' @param assyear Assessment year, if missing (default) will use the last
-#'                year of the catch at age matrix plus 1.
-#'
-#' @return A list containing tibbles
-#' @export
-#'
+# #' read muppet output
+# #'
+# #' @param path A vector containing the path to the assessment directory
+# #' @param Scale A numeric, specifying rescaling (default is 1)
+# #' @param run  Name of the run, if missing (default) will use the directory name
+# #' @param assyear Assessment year, if missing (default) will use the last
+# #'                year of the catch at age matrix plus 1.
+# #'
+# #' @return A list containing tibbles
+# #'
 read_muppet <- function (path,
                          Scale = 1,
                          run,
