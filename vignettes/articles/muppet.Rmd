@@ -14,6 +14,41 @@ knitr::opts_chunk$set(
 
 ```{r}
 library(fishvice)
-mup_rbx(system.file("mup/smx", package = "fishvice"))
+rbx <- mup_rbx("/u2/reikn/Tac/2022/01-cod/ass/mup/smx")
+rbx
+```
+
+```{r, fig.height = 10}
+library(tidyverse)
+rbx$opr %>% 
+  filter(!is.na(age),
+         between(year, 1985, 2022)) %>% 
+  filter(fleet %in% c("U1", "U2")) %>% 
+  mutate(sign = ifelse(r > 0, TRUE, FALSE)) %>% 
+  ggplot() +
+  theme_bw() +
+  geom_bar(aes(year, r, fill = sign), stat="identity") +
+  facet_grid(age ~ fleet) +
+  scale_fill_brewer(palette = "Set1") +
+  scale_x_continuous(breaks=seq(1985, 2030,by=10)) +
+  labs(x= NULL ,y="log deviations") +
+  theme(legend.position = "none")
+```
+
+```{r}
+rbx$opr %>% 
+  filter(is.na(age),
+         between(year, 1985, 2022)) %>% 
+  # temporary fix, need to fix upstream
+  filter(fleet %in% c("catch", "U1", "U2")) %>% 
+  mutate(sign = ifelse(r > 0, TRUE, FALSE)) %>% 
+  ggplot() +
+  theme_bw() +
+  geom_bar(aes(year, r, fill = sign), stat="identity") +
+  facet_grid(. ~ fleet) +
+  scale_x_continuous(breaks=seq(1985, 2030,by=10)) +
+  labs(x= NULL ,y="log deviations") +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none")
 ```
 

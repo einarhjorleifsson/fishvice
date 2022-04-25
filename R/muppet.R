@@ -2,7 +2,7 @@
 #  * Get pM and pF for mup_rbya - ideally this should be returned by muppet in
 #    resultsbyyearandage
 #  * mup_rbx - RETRO
-#  * Question what to do about ssbW vs sW, the is used in the sam returns
+#  * Question what to do about ssbW vs sW, the latter is what sam returns
 #    for SSB weights.
 # check if one can not do something like this, or better still include
 #  this type of thing in a xxxx.sh file within the package
