@@ -16,15 +16,17 @@
 # #'
 # #' @param path A directory path
 # #' @param scale A scaler (default 1)
+# #' @param fleets Name of fleets, e.g. if only fall survey tuning, use fleets = "2".
+#      If missing (default) then use sequential numbers.
 # #' @param assyear Assessment year, if missing (default) will use the year after the last
 # #' catch at age input
 # #' @param run Name of the run, if missing (default) will use the directory name
 # #' @param wide A boolean indicating if returned table wide (default TRUE). If FALSE variable are
-# #' return within column 'var' and values in column 'val'.
+# #' return within column 'var' and values in column 'val' (not active)
 # #'
 # #' @return A tibble
 
-mup_rbya <- function(path, scale = 1, assyear, run, wide = TRUE)  {
+mup_rbya <- function(path, scale = 1, fleets, assyear, run, wide = TRUE)  {
 
   if(!dir.exists(path)) {
     stop(paste0("File path: '", path, "' does not exist"))
@@ -40,37 +42,53 @@ mup_rbya <- function(path, scale = 1, assyear, run, wide = TRUE)  {
   rbya <-
     readr::read_tsv(file.path(path, "resultsbyyearandage"),
                     na = c("-1", "0"),
-                    show_col_types = FALSE)
+                    show_col_types = FALSE) %>%
+    dplyr::rename(oC = ObsCno,
+                  pC = CalcCno,
+                  rC = CatchDiff)
+  # check length of fleets vs nfleets
+  if(!missing(fleets)) {
+    nfleets <- (ncol(rbya) - 13) / 3
+    if(nfleets != length(fleets)) {
+      stop(paste0("Named fleets (", paste(fleets, collapse = " ") , ") not the same as number of fleets (", nfleets, ")" ))
+    }
+  }
+  if(missing(fleets)) {
+    nfleets <- (ncol(rbya) - 13) / 3
+    fleets <- as.character(1:nfleets)
+  }
+  txty <- paste(c("pU","oU", "rU"),c(matrix(fleets,3,length(fleets),byrow=T)),sep="")
+  names(rbya)[14:ncol(rbya)] <- txty
+
+
+
   if(missing(assyear)) {
-    assyear <- rbya %>% dplyr::filter(!is.na(ObsCno)) %>% dplyr::pull(year) %>% max()
+    assyear <- rbya %>% dplyr::filter(!is.na(oC)) %>% dplyr::pull(year) %>% max()
     assyear <- assyear + 1
   }
 
-  if (ncol(rbya) != 19) {
-    rbya$pU2 <- NA
-    rbya$oU2 <- NA
-    rbya$rU2 <- NA
-  }
+  #if (ncol(rbya) != 19) {
+  #  rbya$pU2 <- NA
+  #  rbya$oU2 <- NA
+  #  rbya$rU2 <- NA
+  #}
 
   rbya <-
     rbya %>%
     dplyr::select(year, age,
                   n = N,
                   f = F,
-                  oC = ObsCno,
-                  pC = CalcCno,
-                  rC = CatchDiff,
+                  oC,
+                  pC,
+                  rC,
                   cW = CatchWeights,
                   ssbW = SSBWeights,
                   sW = StockWeights,
-                  oU1 = ObsSurveyNr1,
-                  pU1 = ObsSurveyNr2,
-                  rU1 = SurveyResiduals1,
-                  oU2 = ObsSurveyNr2,
-                  pU2 = CalcSurveyNr2,
-                  rU2 = SurveyResiduals2,
+                  mat = StockMaturity,
                   m = M,
-                  z = Z)  %>%
+                  z = Z,
+                  dplyr::everything()
+    )  %>%
     dplyr::mutate(oC = oC / scale,
                   pC = pC  / scale,
                   cW = cW / scale,
@@ -82,38 +100,77 @@ mup_rbya <- function(path, scale = 1, assyear, run, wide = TRUE)  {
                   assyear = assyear,
                   yc = year - age)
 
-  if(!wide) {
-    rbya <-
-      rbya %>%
-      dplyr::select(-c(pC, rC, oU1, oU2, pU1, pU2, rU1, rU2)) %>%
-      tidyr::gather(var, val, -c(year, age, run, model, assyear, yc)) %>%
-      dplyr::select(year, age, var, val, dplyr::everything())
-  }
+  # if(!wide) {
+  #   rbya <-
+  #     rbya %>%
+  #     dplyr::select(-c(pC, rC, oU1, oU2, pU1, pU2, rU1, rU2)) %>%
+  #     tidyr::gather(var, val, -c(year, age, run, model, assyear, yc)) %>%
+  #     dplyr::select(year, age, var, val, dplyr::everything())
+  # }
 
   return(rbya)
 
 }
 
-mup_opr <- function(path, run, log = TRUE, sur = c("smb", "smh")) {
+
+mup_opr <- function(path, scale = 1, fleets, assyear, run, log = TRUE) {
+
   if(!dir.exists(path)) {
     stop(paste0("File path: '", path, "' does not exist"))
   }
-  d <- mup_rbya(path, run = run)
+
   d <-
-    dplyr::bind_rows(
-      d %>% dplyr::select(year, age, o =  oC, p =  pC, r =  rC) %>% dplyr::mutate(var = "catch"),
-      d %>% dplyr::select(year, age, o = oU1, p = pU1, r = rU1) %>% dplyr::mutate(var = sur[1]),
-      d %>% dplyr::select(year, age, o = oU2, p = pU2, r = rU2) %>% dplyr::mutate(var = sur[2])
-    ) %>%
-    dplyr::mutate(o = log(o),
-                  p = log(p),
-                  run = d$run[1])
+    mup_rbya(path, scale = scale, fleets = fleets, assyear = assyear, run = run) %>%
+    dplyr::rename(.run = run)
+
+  lh <- function(x, var, what) {
+    x %>%
+      dplyr::select(year, age, dplyr::starts_with(c(what)), .run, assyear) %>%
+      tidyr::gather(fleet, {{ var }}, -c(year, age, .run, assyear)) %>%
+      dplyr::mutate(fleet = stringr::str_sub(fleet, 2),
+                    fleet = ifelse(fleet == "C", "catch", fleet))
+  }
+  d <-
+    dplyr::full_join(d %>% lh(o, "o"),
+                     d %>% lh(p, "p"),
+                     by = c("year", "age", ".run", "assyear", "fleet")) %>%
+    dplyr::full_join(d %>% lh(r, "r"),
+                     by = c("year", "age", ".run", "assyear", "fleet"))
+
+  d2 <-
+    fishvice:::mup_rby(path, scale = scale, fleets = fleets, assyear = assyear, run = run) %>%
+    dplyr::rename(.run = run)
+  lh2 <- function(x, var, what) {
+    x %>%
+      dplyr::select(year, dplyr::starts_with(c(what)), .run, assyear) %>%
+      tidyr::gather(fleet, {{ var }}, -c(year, .run, assyear)) %>%
+      dplyr::mutate(fleet = stringr::str_sub(fleet, 2),
+                    fleet = ifelse(fleet == "Y", "catch", fleet))
+  }
+  d2 <-
+    dplyr::full_join(d2 %>% lh2(o, "o"),
+                     d2 %>% lh2(p, "p"),
+              by = c("year", ".run", "assyear", "fleet")) %>%
+    dplyr::mutate(r = log(o/p))
+
+  d <- dplyr::bind_rows(d, d2)
+
+
+  if(log) {
+    d <-
+      d %>%
+      dplyr::mutate(o = log(o),
+                    p = log(p))
+  }
+
+  d <- d %>% dplyr::rename(run = .run)
+
   return(d)
 }
 
 
 
-mup_rby <- function(path, scale = 1, assyear, run) {
+mup_rby <- function(path, scale = 1, fleets, assyear, run) {
 
   if(!dir.exists(path)) {
     stop(paste0("File path: '", path, "' does not exist"))
@@ -128,12 +185,18 @@ mup_rby <- function(path, scale = 1, assyear, run) {
   rby <- readr::read_tsv(file.path(path, "resultsbyyear"),
                          na = c("-1", "0"),
                          show_col_types = FALSE)
-  nfleets <- (ncol(rby) - 14) / 2
-  fleetnames <- as.character(1:nfleets)
-  txty <- paste(c("pU","oU"),c(matrix(fleetnames,2,length(fleetnames),byrow=T)),sep="")
-  txtya <- paste(c("pU","oU","rU"),c(matrix(fleetnames,3,length(fleetnames),byrow=T)),sep="")
-  txta <- paste(c("cvU","qU","pU"),c(matrix(fleetnames,3,length(fleetnames),byrow=T)),sep="")
-
+  # check length of fleets vs nfleets
+  if(!missing(fleets)) {
+    nfleets <- (ncol(rby) - 14) / 2
+    if(nfleets != length(fleets)) {
+      stop(paste0("Named fleets (", paste(fleets, collapse = " ") , ") not the same as number of fleets (", nfleets, ")" ))
+    }
+  }
+  if(missing(fleets)) {
+    nfleets <- (ncol(rby) - 14) / 2
+    fleets <- as.character(1:nfleets)
+  }
+  txty <- paste(c("pU","oU"),c(matrix(fleets,2,length(fleets),byrow=T)),sep="")
   names(rby)[15:ncol(rby)] <- txty
 
   rby <-
@@ -152,10 +215,8 @@ mup_rby <- function(path, scale = 1, assyear, run) {
                   bio2 = CbioR,
                   eggp = Eggproduction) %>%
     dplyr::mutate(y = ifelse(is.na(oY), pY, oY),
-                  hr_old = y/bio,
-                  hr = (1/3 * y + 3/4 * dplyr::lead(y)) / bio,
-                  #hr1 = y / bio1,
-                  #hr2 = y / bio2,
+                  hr = y/bio,
+                  hr2 = (1/3 * y + 3/4 * dplyr::lead(y)) / bio,
                   r = r / scale) %>%
     dplyr::select(year:fbar, hr, pY, oY, dplyr::everything()) %>%
     dplyr::select(-y)
@@ -167,7 +228,6 @@ mup_rby <- function(path, scale = 1, assyear, run) {
 
   rby <-
     rby %>%
-    #select(year, bio, ssb, r, hr, fbar, oY)
     dplyr::mutate(run = run,
                   model = "mup",
                   assyear = assyear)
@@ -370,6 +430,7 @@ getlineswin <- function (file, line1, line2) {
 #'
 #' @param path A directory path
 #' @param scale A scaler (default 1)
+#' @param fleets xxx
 #' @param assyear Assessment year, if missing (default) will use the year after the last
 #' catch at age input
 #' @param run Name of the run, if missing (default) will use the directory name
@@ -380,18 +441,21 @@ getlineswin <- function (file, line1, line2) {
 #'
 #' @export
 #'
-#' @examples
-#' rbx <- mup_rbx(path = system.file("mup/smx", package = "fishvice"), scale = 1000)
-mup_rbx <- function(path, scale = 1, assyear, run, wide = TRUE) {
+
+mup_rbx <- function(path, scale = 1, fleets, assyear, run, wide = TRUE) {
 
   if(!dir.exists(path)) {
     stop(paste0("File path: '", path, "' does not exist"))
   }
 
-  list(rby  = mup_rby(path, scale, assyear, run),
-       rbya = mup_rbya(path, scale, assyear, run, wide),
+  if(missing(run)) run <- basename(path)
+
+  if(missing(scale)) scale <- 1
+
+  list(rby  = mup_rby(path, scale, fleets = fleets, assyear = assyear, run = run),
+       rbya = mup_rbya(path, scale, fleets = fleets, assyear = assyear, run, wide),
        rba  = mup_rba(path, run),
-       opr  = mup_opr(path, run),
+       opr  = mup_opr(path, scale, assyear = assyear, run = run),
        std  = mup_std(path),
        par  = mup_par(path))
 
@@ -401,7 +465,7 @@ mup_rbx <- function(path, scale = 1, assyear, run, wide = TRUE) {
 # HOSKI ------------------------------------------------------------------------
 # Hér sérðu dæmi um nýja read_separ (read_separ1) í bili
 # notkun á því og útkomu.
-# res <- read_separ1(".",".",fleetnames=c("3","1","2","4"),assYear=year+1)
+# res <- read_separ1(".",".",fleets=c("3","1","2","4"),assYear=year+1)
 #
 # Floti 1 er alltaf mars survey , 2 er haustrall 3 er marssurvey 1-2 og 4 haustrall12 það er út af þessu logq1 dæmi
 #
@@ -409,7 +473,7 @@ mup_rbx <- function(path, scale = 1, assyear, run, wide = TRUE) {
 #
 # Ef vilja hafa þetta öðruvísi er defaultið að númera flotanna í vaxandi röð.
 # read_separ1 <- function (path, run, rName = NA, mName = NA, calcSurBio = F,
-#                          ggFactor = T, Scale = 1000, assYear = NA, retroY = NA,fleetnames)
+#                          ggFactor = T, Scale = 1000, assYear = NA, retroY = NA,fleets)
 # {
 #   if(file.exists("muppet.par")){ # get AIC could look for as.numeric=T
 #     dat <- scan("muppet.par",what=character(),sep=" ",quiet=T)[1:12]
@@ -423,7 +487,7 @@ mup_rbx <- function(path, scale = 1, assyear, run, wide = TRUE) {
 #
 #
 #
-#   if(missing(fleetnames)){ # to have some default
+#   if(missing(fleets)){ # to have some default
 #     # Test number of columns
 #     if (is.na(retroY))
 #       rby <- read.table(paste(path, run, "resultsbyyear", sep = "/"),
@@ -433,15 +497,15 @@ mup_rbx <- function(path, scale = 1, assyear, run, wide = TRUE) {
 #                                     sep = "/"), retroY, sep = ""),
 #                         header = T, na.strings = c("-1", "0"))
 #     nfleets <- (ncol(rby)-14)/2
-#     fleetnames <- as.character(1:nfleets)
+#     fleets <- as.character(1:nfleets)
 #   }
-#   txty <- paste(c("oU","pU"),c(matrix(fleetnames,2,length(fleetnames),byrow=T)),sep="")
+#   txty <- paste(c("oU","pU"),c(matrix(fleets,2,length(fleets),byrow=T)),sep="")
 #   cnRby <- c("year", "r", "n3", "n6", "bioF", "bio", "bio1",
 #              "ssb", "ssb2", "fbar", "hr", "oY", "pY",txty,"run", "model")
-#   txtya <- paste(c("oU","pU","rU"),c(matrix(fleetnames,3,length(fleetnames),byrow=T)),sep="")
+#   txtya <- paste(c("oU","pU","rU"),c(matrix(fleets,3,length(fleets),byrow=T)),sep="")
 #   cnRbya <- c("year", "age", "oC", "cW", "sW", "ssbW", "mat",
 #               "n", "z", "f", "m", "pC", "rC",txtya)
-#   txta<- paste(c("cvU","qU","pU"),c(matrix(fleetnames,3,length(fleetnames),byrow=T)),sep="")
+#   txta<- paste(c("cvU","qU","pU"),c(matrix(fleets,3,length(fleets),byrow=T)),sep="")
 #
 #   cnRba <- c("age", "sel", "pSel", "sigma", txta, "run", "model")
 #   if (is.na(retroY))
@@ -519,7 +583,7 @@ mup_rbx <- function(path, scale = 1, assyear, run, wide = TRUE) {
 #     rba$assYear <- assYear
 #   }
 #   if(exists("surveybiopow")){
-#     names(surveybiopow) <- fleetnames
+#     names(surveybiopow) <- fleets
 #     return(list(rby = rby, rbya = rbya, rba = rba,aicinfo=aicinfo,surveybiopow=surveybiopow))
 #   }
 #   else
@@ -568,7 +632,7 @@ mup_rbx <- function(path, scale = 1, assyear, run, wide = TRUE) {
 #   if(PIN && (year != 2019))Changepinfile("muppet.par",txt = c("# lnRecr:","# lnEffort:"),outputfile="muppet.pin")
 #   write.table(txt,file="icecod.dat.opt",sep="\n",row.names=F,quote=F,col.names=F)
 #   system("muppet -nox -ind icecod.dat.opt > /dev/null")
-#   res <- read_separ1(".",".",fleetnames=c("3","1","2","4"),assYear=year+1)
+#   res <- read_separ1(".",".",fleets=c("3","1","2","4"),assYear=year+1)
 #   rby[[as.character(assyear)]] <- res$rby
 #   rbya[[as.character(assyear)]] <- res$rbya
 #   rba[[as.character(assyear)]] <- res$rba

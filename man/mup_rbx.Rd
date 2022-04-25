@@ -4,12 +4,14 @@
 \alias{mup_rbx}
 \title{read muppet output}
 \usage{
-mup_rbx(path, scale = 1, assyear, run, wide = TRUE)
+mup_rbx(path, scale = 1, fleets, assyear, run, wide = TRUE)
 }
 \arguments{
 \item{path}{A directory path}
 
 \item{scale}{A scaler (default 1)}
+
+\item{fleets}{xxx}
 
 \item{assyear}{Assessment year, if missing (default) will use the year after the last
 catch at age input}
@@ -24,7 +26,4 @@ A tibble
 }
 \description{
 reads muppet results
-}
-\examples{
-rbx <- mup_rbx(path = system.file("mup/smx", package = "fishvice"), scale = 1000)
 }
