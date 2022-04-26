@@ -235,7 +235,8 @@ mup_rby <- function(path, scale = 1, fleets, assyear, run) {
   return(rby)
 }
 
-mup_rba <- function(path, run) {
+# note: assyear not extractable by default
+mup_rba <- function(path, fleets, run) {
 
   if(!dir.exists(path)) {
     stop(paste0("File path: '", path, "' does not exist"))
@@ -245,21 +246,32 @@ mup_rba <- function(path, run) {
     stop(paste0("File: '", file.path(path, "resultsbyage"), "' does not exist"))
   }
 
-  if(missing(run)) run <- basename(path)
+
 
   rba <-
     readr::read_tsv(file.path(path, "resultsbyage"),
                     na = c("-1", "0"),
                     show_col_types = FALSE)
 
-  n.fleets <- (ncol(rba) - 4) / 3
+  # check length of fleets vs nfleets
+  if(!missing(fleets)) {
+    nfleets <- (ncol(rba) - 4) / 3
+    if(nfleets != length(fleets)) {
+      stop(paste0("Named fleets (", paste(fleets, collapse = " ") , ") not the same as number of fleets (", nfleets, ")" ))
+    }
+  }
+  if(missing(fleets)) {
+    nfleets <- (ncol(rba) - 4) / 3
+    fleets <- as.character(1:nfleets)
+  }
+  txty <- paste(c("sigmaU", "qU", "pU"),c(matrix(fleets,3, length(fleets),byrow=T)),sep="")
+  names(rba)[5:ncol(rba)] <- txty
 
-  cn <- c("age", "sel", "psel", "cvC", paste0(c("cvU", "qU", "pU"), rep(1:n.fleets, each = 3)))
-  colnames(rba) <- cn
+
+  if(missing(run)) run <- basename(path)
 
   rba <-
-    dplyr::bind_cols(rba %>% dplyr::select(1, 4:ncol(rba)),
-                     rba %>% dplyr::select(2:3)) %>%
+    rba %>%
     dplyr::mutate(run = run,
                   model = "mup")
 
