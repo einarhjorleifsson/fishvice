@@ -466,7 +466,7 @@ mup_rbx <- function(path, scale = 1, fleets, assyear, run, wide = TRUE) {
 
   list(rby  = mup_rby(path, scale, fleets = fleets, assyear = assyear, run = run),
        rbya = mup_rbya(path, scale, fleets = fleets, assyear = assyear, run, wide),
-       rba  = mup_rba(path, run),
+       rba  = mup_rba(path, fleets = fleets, run = run),
        opr  = mup_opr(path, scale, assyear = assyear, run = run),
        std  = mup_std(path),
        par  = mup_par(path))
