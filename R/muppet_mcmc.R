@@ -34,15 +34,15 @@ mup_mcmc <- function(path, file, std = TRUE) {
   if(std) {
     d <-
       d %>%
-      mutate(var = case_when(var == "AssessmentErr" ~ "asserr",
-                             var == "CalcCatchIn1000tons" ~ "oY",
-                             var == "FishingYearCatch" ~ "oY2",
-                             var == "HCRrefbio" ~ "bio",
-                             var == "RefBio1" ~ "bio1",
-                             var == "RefBio2" ~ "bio2",
-                             var == "RefF" ~ "fbar",
-                             var == "Spawningstock" ~ "ssb",
-                             TRUE ~ var))
+      dplyr::mutate(var = dplyr::case_when(var == "AssessmentErr" ~ "asserr",
+                                           var == "CalcCatchIn1000tons" ~ "oY",
+                                           var == "FishingYearCatch" ~ "oY2",
+                                           var == "HCRrefbio" ~ "bio",
+                                           var == "RefBio1" ~ "bio1",
+                                           var == "RefBio2" ~ "bio2",
+                                           var == "RefF" ~ "fbar",
+                                           var == "Spawningstock" ~ "ssb",
+                                           TRUE ~ var))
   }
 
   return(d)

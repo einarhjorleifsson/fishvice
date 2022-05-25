@@ -417,7 +417,7 @@ mup_hst <- function (path, txt, startyear = 1955, names, negative.allowed = FALS
   Result <-
     dplyr::bind_rows(Result, .id = "year") %>%
     tibble::as_tibble() %>%
-    mutate(year = as.integer(year))
+    dplyr::mutate(year = as.integer(year))
 
   return(Result)
 }
