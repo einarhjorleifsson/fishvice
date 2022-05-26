@@ -10,8 +10,7 @@ rbx_to_flstock(
   sDesc = "none",
   pf = 0,
   pm = 0,
-  aF1 = 5,
-  aF2 = 10
+  fage = c(5, 10)
 )
 }
 \arguments{
@@ -25,9 +24,7 @@ rbx_to_flstock(
 
 \item{pm}{Partial natural mortality}
 
-\item{aF1}{Lower reference age}
-
-\item{aF2}{Upper reference age}
+\item{fage}{A vector containing lower and upper fishing mortality reference age}
 }
 \description{
 Converts the rby and rbya to FLStock object.

@@ -138,7 +138,7 @@ mup_opr <- function(path, scale = 1, fleets, assyear, run, log = TRUE) {
                      by = c("year", "age", ".run", "assyear", "fleet"))
 
   d2 <-
-    fishvice:::mup_rby(path, scale = scale, fleets = fleets, assyear = assyear, run = run) %>%
+    mup_rby(path, scale = scale, fleets = fleets, assyear = assyear, run = run) %>%
     dplyr::rename(.run = run)
   lh2 <- function(x, var, what) {
     x %>%

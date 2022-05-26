@@ -14,12 +14,15 @@
 #' @param sDesc Character vectro containing some description
 #' @param pf Partial fishing mortality
 #' @param pm Partial natural mortality
-#' @param aF1 Lower reference age
-#' @param aF2 Upper reference age
+#' @param fage A vector containing lower and upper fishing mortality reference age
 #'
 #' @note TO DO: check the unit stuff
 #'
-rbx_to_flstock <- function(rbx, sName = "nn", sDesc = "none", pf = 0, pm = 0, aF1 = 5, aF2 = 10) {
+rbx_to_flstock <- function(rbx, sName = "nn", sDesc = "none", pf = 0, pm = 0, fage = c(5, 10)) {
+
+  rbya <- rbx$rbya
+
+  cn <- colnames(rbya)
 
   a1 <- min(rbya$age)
   a2 <- max(rbya$age)
@@ -27,33 +30,39 @@ rbx_to_flstock <- function(rbx, sName = "nn", sDesc = "none", pf = 0, pm = 0, aF
 
   y1 <- min(rbya$year)
   y2 <- max(rbya$year)
+  nYear <- length(y1:y2)
+
+  # Note: pf not in rbya
+  if(!stringr::str_detect(cn, "pf") %>% any()) {
+    if(missing(pf)) pf <- 0
+    if(length(pf) == 1) pf <- rep(pf, nAge)
+    pf <- rep(pf, nYear)
+    rbya$pf <- pf
+  }
+  if(!stringr::str_detect(cn, "pm") %>% any()) {
+    if(missing(pm)) pm <- 0
+    if(length(pm) == 1) pm <- rep(pm, nAge)
+    pm <- rep(pm, nYear)
+    rbya$pm <- pm
+  }
+
 
   fls <-
-    rbx$rbya %>%
-    dplyr::select(year, age, oC, cW, ssbW, n, m, mat, f) %>%
+    rbya %>%
+    dplyr::select(year, age, oC, cW, ssbW, n, m, mat, f, pf, pm) %>%
     # this is brute force, user has to work on this upstream
     # tidyr::drop_na() %>%
     tidyr::gather(rvk, data, -c(year, age)) %>%
-    dplyr::mutate(data = tidyr::replace_na(data, 0)) %>%
+    dplyr::mutate(data = tidyr::replace_na(data, 0),
+                  units = ifelse(rvk == "f", "f", NA_character_)) %>%
     dplyr::left_join(lexicon, by = "rvk") %>%
-    dplyr::select(slot, age, year, data) %>%
+    dplyr::select(slot, age, year, data, units) %>%
     FLCore::as.FLStock()
 
-  units(FLCore::harvest(fls)) <- "f"
-  # check if pF and pM is in rbya, if not use input vector
-  #  if missing, assume 0
-  # need to revisit, if not atomic does one need the rep
-  if(FLCore::harvest.spwn(fls) %>% is.na() %>% all()) {
-    FLCore::harvest.spwn(fls) <- rep(pf, nAge)
-    units(FLCore::harvest.spwn(fls)) <- "f"
-  }
-  if(FLCore::m.spwn(fls) %>% is.na() %>% all()) {
-    FLCore::m.spwn(fls) <- rep(pm, nAge)
-    units(FLCore::m.spwn(fls)) <- "f"
-  }
+  # units(FLCore::harvest(fls)) <- "f"
 
-  # svolitid ut ur ku
-  FLCore::catch(fls) <- rby$oY
+    # svolitid ut ur ku
+  FLCore::catch(fls) <- rbx$rby$oY
 
   # NOTE: what if catch.n and catch.wt are not in input??
   if(FLCore::landings.n(fls)  %>% sum(na.rm = TRUE) == 0) FLCore::landings.n(fls)   <- FLCore::catch.n(fls)
@@ -63,6 +72,8 @@ rbx_to_flstock <- function(rbx, sName = "nn", sDesc = "none", pf = 0, pm = 0, aF
 
   if(FLCore::discards(fls) %>% sum(na.rm = TRUE) == 0) FLCore::discards(fls) <- 0
   if(FLCore::landings(fls) %>% sum(na.rm = TRUE) == 0) FLCore::landings(fls) <- FLCore::catch(fls)
+
+  if(!missing(fage)) FLCore::range(fls, c("minfbar", "maxfbar")) <- fage
 
   return(fls)
 
