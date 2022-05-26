@@ -18,43 +18,37 @@ library(FLXSA)
 library(ggplotFL)
 library(patchwork)
 library(tidyverse)
+# remotes::install_github("einarhjorleifsson/fishvice", dependencies = FALSE)
 library(fishvice)
 ```
 
 ### get data
 
 ```{r inputs}
-rbx <- fishvice::mup_rbx("/u2/reikn/Tac/2022/01-cod/ass/mup/smx", scale = 1000)
 fil <- "/u2/reikn/Tac/2022/01-cod/data-raw/Supplementary S3.xlsx"
 shits <- readxl::excel_sheets(fil)
-mc.smb <- 
-  readxl::read_excel(fil, sheet = shits[1]) %>% 
-  mutate(sur = "smb")
-mc.smh <- 
-  readxl::read_excel(fil,
-                     sheet = shits[2]) %>% 
-  mutate(sur = "smh")
-mc <- 
-  bind_rows(mc.smb, mc.smh) %>% 
-  spread(sur, Mc) %>% 
-  mutate(mc = ifelse(is.na(smh), smb, (smb + smh) / 2))
 mc <- 
   expand_grid(year = 1985:2022,
               age = 1:14) %>% 
-  left_join(mc %>% select(year, age, mc)) %>% 
-  mutate(mc = ifelse(year < 1994, 0.2, mc)) %>% 
-  arrange(year, age) %>% 
+  left_join(bind_rows(readxl::read_excel(fil, sheet = shits[1]) %>% mutate(sur = "smb"),
+                      readxl::read_excel(fil, sheet = shits[2]) %>% mutate(sur = "smh"))) %>% 
+  spread(sur, Mc) %>% 
+  mutate(mc = case_when(year < 1994 ~ 0.2,
+                        is.na(smh) ~ smb,
+                        TRUE ~ (smb + smh) / 2)) %>% 
+  select(year, age, mc) %>% 
+  arrange(year, age) %>%
   group_by(year) %>% 
+  # assume same mc in all year after last datayear
   fill(mc, .direction = "downup") %>% 
+  # 10+ same as 9
   group_by(age) %>% 
   fill(mc) %>% 
   ungroup()
-```
-
-### flr setup
-
-```{r xsasetup}
-rbx$rby <- rbx$rby %>% filter(year %in% 1985:2021)
+rbx <- fishvice::mup_rbx("/u2/reikn/Tac/2022/01-cod/ass/mup/smx", scale = 1000)
+# have not figured out how to set xsa up with survey data in year with no catch data
+#  besides of course the old-way, but can not be bothered with that now
+rbx$rby <-  rbx$rby %>%  filter(year %in% 1985:2021)
 rbx$rbya <- rbx$rbya %>% filter(year %in% 1985:2021)
 # set maturity and stock weights such that SSB is actually B4+
 rbx$rbya <-
@@ -64,15 +58,22 @@ rbx$rbya <-
          ssbW = cW,
          ssbW = replace_na(ssbW, 0))
 rbx.mc <- rbx
+# replace 0.2 with mc
 rbx.mc$rbya <-
   rbx.mc$rbya %>% 
   select(-m) %>% 
   left_join(mc %>% rename(m = mc))
+```
+
+### flr setup
+
+```{r xsasetup}
 # pf and pm set to 0, so "SSB" = B4+ is based on stock in numbers in start of year
-fls <- rbx %>% rbx_to_flstock(pf = 0, pm = 0, fage = c(5, 10))
+# issue: age 14 should not be a plus group, for relative comparisons should though be ok
+fls <-    rbx %>%    rbx_to_flstock(pf = 0, pm = 0, fage = c(5, 10))
 fls.mc <- rbx.mc %>% rbx_to_flstock(pf = 0, pm = 0, fage = c(5, 10))
 ind.smb <- rbx_to_flindex(rbx, "U1") %>% trim(year = 1985:2021)
-ind.smh <- rbx_to_flindex(rbx, "U2", time = c(10/12, 10.5/12)) %>% trim(year = 1996:2021)
+# ind.smh <- rbx_to_flindex(rbx, "U2", time = c(10/12, 10.5/12)) %>% trim(year = 1996:2021)
 # only spring survey used in paper
 ind <- FLIndices(ind.smb)
 ```
@@ -80,27 +81,19 @@ ind <- FLIndices(ind.smb)
 ### xsa runs
 
 ```{r xsaruns}
-# power up to age 5, q estimated for all age groups!
-cntr <- FLXSA.control(maxit = 70, rage = 5, qage = 14)
-xsa   <- FLXSA(fls, ind, cntr)
-xsa.mc <- FLXSA(fls.mc, ind, cntr)
-retro.years <- 1998:2021
-retro <- tapply(retro.years, 1:length(retro.years), function(x){
-  window(fls,end=x)+FLXSA(window(fls, end = x), ind, cntr)
-})
-names(retro) <- retro.years
-retro.mc <- tapply(retro.years, 1:length(retro.years), function(x){
-  window(fls.mc,end=x)+FLXSA(window(fls.mc, end = x), ind, cntr)
-})
-names(retro.mc) <- retro.years
-```
+# power or no power, that is the question
+cntrp0 <- FLXSA.control(maxit = 70, rage = 0, qage = 14)
+cntrp5 <- FLXSA.control(maxit = 70, rage = 5, qage = 14)
 
-### results
-
-```{r result}
-lh.retro <- function(ret) {
+# a little helper
+lh_retro <- function(fls, ind, cntr, ryears = 1998:2021) {
+  
+  retro <-    tapply(ryears, 1:length(ryears), function(x) {
+    window(fls, end = x)    + FLXSA(window(fls, end = x),    ind, cntr)
+  })
+  names(retro) <- ryears
   bio <- 
-    map(ret, computeStock) %>% 
+    map(retro, computeStock) %>% 
     map(as.data.frame) %>% 
     map(as_tibble) %>% 
     bind_rows(.id = "assyear") %>% 
@@ -110,16 +103,26 @@ lh.retro <- function(ret) {
     bio %>% 
     filter(assyear == max(assyear)) %>% 
     select(year, bio = data)
-  bio %>% 
+  bio <- 
+    bio %>% 
     left_join(bio.last) %>% 
     mutate(r = log(data / bio))
+  return(list(bio = bio, retro = retro, cntr = cntr, ind = ind))
 }
-ret <- lh.retro(retro) %>% mutate(run = "02")
-ret.mc <- lh.retro(retro.mc) %>% mutate(run = "mc")
+retp0 <-    lh_retro(fls,    ind, cntrp0)
+retp0.mc <- lh_retro(fls.mc, ind, cntrp0)
+retp5 <-    lh_retro(fls,    ind, cntrp5)
+retp5.mc <- lh_retro(fls.mc, ind, cntrp5)
 ```
 
-```{r, fig.height = 7}
-res <- bind_rows(ret, ret.mc)
+### results
+
+
+```{r, fig.height = 8}
+res <- bind_rows(retp0$bio    %>% mutate(run = "p002"),
+                 retp5$bio    %>% mutate(run = "p502"),
+                 retp0.mc$bio %>% mutate(run = "p0mc"),
+                 retp5.mc$bio %>% mutate(run = "p5mc"))
 last.point <- 
   res %>% 
   filter(year == assyear)
@@ -138,17 +141,31 @@ p2 <-
              colour = "red") +
   facet_wrap(~ run) +
   labs(x = NULL, y = "contemporaneous\n vs current")
+```
+
+clarification on runs:
+```
+~run,    ~comment,
+"p002", "No power,       M = 0.20",
+"p0mc", "No power,       M = mc",
+"p502", "Power ages 1:5, M = 0.20",
+"p5mc", "Power ages 1:5, M = mc"
+```
+
+```{r}
 p1 + p2 + plot_layout(ncol = 1)
 ```
+
+#### perfomance measure
 
 ```{r}
 last.point %>% 
   group_by(run) %>% 
-  summarise(mean = mean(r),
-            sd = sd(r))
+  summarise(bias = mean(r),
+            cv = sd(r))
 ```
 
-### sanity check - mc input
+### sanity check - the mc input
 
 ```{r sanitycheck}
 m(fls.mc) %>% trim(year = 1993:2021, age = 1:10) %>% round(2)
