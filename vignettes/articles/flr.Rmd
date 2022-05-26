@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
 
 ```{r}
 library(FLCore)
+library(FLXSA)
 library(ggplotFL)
 library(tidyverse)
 library(fishvice)
@@ -21,8 +22,41 @@ library(fishvice)
 
 ```{r}
 rbx <- fishvice::mup_rbx("/u2/reikn/Tac/2022/01-cod/ass/mup/smx")
+fls <- rbx %>% rbx_to_flstock(pf = 1, pm = 1, fage = c(5, 10))
+fls %>% plot()
+```
 
-icod <- rbx %>% fishvice::rbx_to_flstock(pf = 1, pm = 1, fage = c(5, 10))
-icod %>% plot()
+## XSA
+
+```{r}
+years <- 1985:2021
+fls <- fls %>% trim(year = years)
+```
+
+```{r}
+ind <- rbx_to_flindex(rbx, "U1") %>% trim(year = years)
+cntr <- FLXSA.control()
+xsa   <- FLXSA(fls, ind, cntr)
+diagnostics(xsa)
+fls.new  <- fls + xsa
+plot(fls.new) +
+  geom_vline(xintercept = 2022)
+
+fls.new %>% 
+  fishvice::flstock_to_rbya() %>% 
+  group_by(year) %>% 
+  summarise(fbar = mean(f[age %in% 5:10]),
+            bio = sum(n[age %in% 4:14] * cW[age %in% 4:14]) / 1e6) %>% 
+  mutate(run = "XSA") %>% 
+  bind_rows(rbx$rby %>% 
+              filter(year %in% 1985:2022) %>% 
+              select(year, fbar, bio) %>% 
+              mutate(run = "MUP")) %>% 
+  gather(var, val, -c(year, run)) %>% 
+  ggplot(aes(year, val, colour = run)) +
+  theme_bw(base_size = 15) +
+  geom_line(lwd = 1) +
+  scale_colour_brewer(palette = "Set1") +
+  facet_wrap(~ var, scales = "free_y")
 ```
 

@@ -79,3 +79,40 @@ rbx_to_flstock <- function(rbx, sName = "nn", sDesc = "none", pf = 0, pm = 0, fa
 
 }
 
+
+#' rbx_to_flindex
+#'
+#' @param rbx xxx
+#' @param sur xxx
+#' @param time xxx
+#'
+#' @return FLIndex
+#' @export
+#'
+rbx_to_flindex <- function(rbx, sur = "U1", time = c(3/12, 3.5/12)) {
+
+  opr <-
+    rbx$opr %>%
+    dplyr::filter(fleet == sur) %>%
+    dplyr::select(year, age, o) %>%
+    # NOTE: need to check this convention
+    dplyr::mutate(o = exp(o)) %>%
+    tidyr::drop_na()
+  ages  <- opr %>% dplyr::pull(age)  %>% unique() %>% sort()
+  years <- opr %>% dplyr::pull(year) %>% unique() %>% sort()
+
+  fli <-
+    opr %>%
+    tidyr::spread(age, o, fill = 0) %>%
+    dplyr::select(-year) %>%
+    as.matrix() %>%
+    t() %>%
+    FLCore::FLQuant(dimnames = list(age = ages, year = years)) %>%
+    FLCore::FLIndex(index = ., name = sur)
+  range(fli)[c('startf', 'endf')] <- time
+
+  return(fli)
+
+}
+
+
