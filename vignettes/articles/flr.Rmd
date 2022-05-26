@@ -20,13 +20,17 @@ library(tidyverse)
 library(fishvice)
 ```
 
+### Convert rbx to flr
+
 ```{r}
 rbx <- fishvice::mup_rbx("/u2/reikn/Tac/2022/01-cod/ass/mup/smx")
 fls <- rbx %>% rbx_to_flstock(pf = 1, pm = 1, fage = c(5, 10))
 fls %>% plot()
 ```
 
-## XSA
+### Run a default xsa
+
+... i.e. no fine tweeking of the default xsa setup
 
 ```{r}
 years <- 1985:2021
@@ -37,21 +41,25 @@ fls <- fls %>% trim(year = years)
 ind <- rbx_to_flindex(rbx, "U1") %>% trim(year = years)
 cntr <- FLXSA.control()
 xsa   <- FLXSA(fls, ind, cntr)
-diagnostics(xsa)
+#diagnostics(xsa)
 fls.new  <- fls + xsa
 plot(fls.new) +
   geom_vline(xintercept = 2022)
+```
 
+### Compare muppet and xsa
+
+```{r}
 fls.new %>% 
   fishvice::flstock_to_rbya() %>% 
   group_by(year) %>% 
   summarise(fbar = mean(f[age %in% 5:10]),
             bio = sum(n[age %in% 4:14] * cW[age %in% 4:14]) / 1e6) %>% 
-  mutate(run = "XSA") %>% 
+  mutate(run = "xsa") %>% 
   bind_rows(rbx$rby %>% 
               filter(year %in% 1985:2022) %>% 
               select(year, fbar, bio) %>% 
-              mutate(run = "MUP")) %>% 
+              mutate(run = "mup")) %>% 
   gather(var, val, -c(year, run)) %>% 
   ggplot(aes(year, val, colour = run)) +
   theme_bw(base_size = 15) +
