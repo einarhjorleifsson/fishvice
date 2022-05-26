@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 library(FLCore)
 library(FLXSA)
 library(ggplotFL)
+library(patchwork)
 library(tidyverse)
 library(fishvice)
 ```
@@ -23,8 +24,21 @@ library(fishvice)
 ### Convert rbx to flr
 
 ```{r}
-rbx <- fishvice::mup_rbx("/u2/reikn/Tac/2022/01-cod/ass/mup/smx")
-fls <- rbx %>% rbx_to_flstock(pf = 1, pm = 1, fage = c(5, 10))
+rbx <- fishvice::mup_rbx("/u2/reikn/Tac/2022/01-cod/ass/mup/smx", scale = 1000)
+rbx$rby <- rbx$rby %>% filter(year %in% 1985:2022)
+rbx$rbya <- rbx$rbya %>% filter(year %in% 1985:2022)
+# set maturity such that SSB is actually B4+
+if(TRUE) {
+  rbx$rbya <-
+    rbx$rbya %>% 
+    mutate(mat = replace_na(mat, 0),
+           mat = ifelse(age >= 4, 1, 0),
+           ssbW = cW,
+           ssbW = replace_na(ssbW, 0))
+}
+
+
+fls <- rbx %>% rbx_to_flstock(pf = 0, pm = 0, fage = c(5, 10))
 fls %>% plot()
 ```
 
@@ -38,23 +52,27 @@ fls <- fls %>% trim(year = years)
 ```
 
 ```{r}
-ind <- rbx_to_flindex(rbx, "U1") %>% trim(year = years)
-cntr <- FLXSA.control()
+ind.smb <- rbx_to_flindex(rbx, "U1") %>% trim(year = years)
+ind.smh <- rbx_to_flindex(rbx, "U2", time = c(10/12, 10.5/12)) %>% trim(year = 1996:2021)
+ind <- FLIndices(ind.smb)
+cntr <- FLXSA.control(maxit = 70, rage = 5, qage = 14)
 xsa   <- FLXSA(fls, ind, cntr)
 #diagnostics(xsa)
 fls.new  <- fls + xsa
 plot(fls.new) +
-  geom_vline(xintercept = 2022)
+  geom_vline(xintercept = 2021)
 ```
 
 ### Compare muppet and xsa
+
+... check terminal biomass for xsa, not the same as the plot above
 
 ```{r}
 fls.new %>% 
   fishvice::flstock_to_rbya() %>% 
   group_by(year) %>% 
   summarise(fbar = mean(f[age %in% 5:10]),
-            bio = sum(n[age %in% 4:14] * cW[age %in% 4:14]) / 1e6) %>% 
+            bio = sum(n[age %in% 4:14] * cW[age %in% 4:14])) %>% 
   mutate(run = "xsa") %>% 
   bind_rows(rbx$rby %>% 
               filter(year %in% 1985:2022) %>% 
@@ -66,5 +84,239 @@ fls.new %>%
   geom_line(lwd = 1) +
   scale_colour_brewer(palette = "Set1") +
   facet_wrap(~ var, scales = "free_y")
+```
+
+### xsa retro
+
+```{r}
+retro.years <- 1998:2021
+fls.retro <- tapply(retro.years, 1:length(retro.years), function(x){
+  window(fls,end=x)+FLXSA(window(fls, end = x), ind, cntr)
+})
+class(fls.retro)
+names(fls.retro) <- retro.years
+
+bio.m02 <- 
+  map(fls.retro, computeStock) %>% 
+  map(as.data.frame) %>% 
+  map(as_tibble) %>% 
+  bind_rows(.id = "assyear") %>% 
+  mutate(assyear = as.integer(assyear)) %>% 
+  ungroup()
+bio.last <- 
+  bio.m02 %>% 
+  filter(assyear == max(assyear)) %>% 
+  select(year, bio = data)
+bio.m02 <-
+  bio.m02 %>% 
+  left_join(bio.last) %>% 
+  mutate(r = log(data / bio))
+
+bio.m02 %>% 
+  ggplot(aes(year, data, group = assyear)) +
+  geom_line()
+p.02 <- 
+  bio.m02 %>% 
+  ggplot(aes(year, r, group = assyear)) +
+  geom_line() +
+  geom_point(data = bio.m02 %>% filter(year == assyear),
+             colour = "red") +
+  scale_y_continuous(limits = c(-0.15, 0.15))
+p.02
+```
+
+### Mc
+
+```{r}
+fil <- "/u2/reikn/Tac/2022/01-cod/data-raw/Supplementary S3.xlsx"
+shits <- readxl::excel_sheets(fil)
+mc.smb <- 
+  readxl::read_excel(fil, sheet = shits[1]) %>% 
+  mutate(sur = "smb")
+mc.smh <- 
+  readxl::read_excel(fil,
+                     sheet = shits[2]) %>% 
+  mutate(sur = "smh")
+mc <- 
+  bind_rows(mc.smb, mc.smh) %>% 
+  spread(sur, Mc) %>% 
+  mutate(mc = ifelse(is.na(smh), smb, (smb + smh) / 2))
+mc <- 
+  expand_grid(year = 1985:2022,
+              age = 1:14) %>% 
+  left_join(mc %>% select(year, age, mc)) %>% 
+  mutate(mc = ifelse(year < 1994, 0.2, mc)) %>% 
+  arrange(year, age) %>% 
+  group_by(year) %>% 
+  fill(mc, .direction = "downup") %>% 
+  group_by(age) %>% 
+  fill(mc) %>% 
+  ungroup()
+rbx.mc <- rbx
+rbx.mc$rbya <-
+  rbx.mc$rbya %>% 
+  select(-m) %>% 
+  left_join(mc %>% rename(m = mc))
+```
+
+```{r}
+fls.mc <- rbx.mc %>% rbx_to_flstock(pf = 0, pm = 0, fage = c(5, 10))
+xsa   <- FLXSA(fls.mc, ind, cntr)
+#diagnostics(xsa)
+fls.mc.new  <- fls.mc + xsa
+retro.years <- 1998:2021
+fls.mc.retro <- tapply(retro.years, 1:length(retro.years), function(x){
+  window(fls.mc,end=x)+FLXSA(window(fls.mc, end = x), ind, cntr)
+})
+names(fls.mc.retro) <- retro.years
+
+bio.m02 <- 
+  map(fls.mc.retro, computeStock) %>% 
+  map(as.data.frame) %>% 
+  map(as_tibble) %>% 
+  bind_rows(.id = "assyear") %>% 
+  mutate(assyear = as.integer(assyear)) %>% 
+  ungroup()
+bio.last <- 
+  bio.m02 %>% 
+  filter(assyear == max(assyear)) %>% 
+  select(year, bio = data)
+bio.m02 <-
+  bio.m02 %>% 
+  left_join(bio.last) %>% 
+  mutate(r = log(data / bio))
+
+bio.m02 %>% 
+  ggplot(aes(year, data, group = assyear)) +
+  geom_line()
+bio.m02 %>% 
+  ggplot(aes(year, r, group = assyear)) +
+  geom_line() +
+  geom_point(data = bio.m02 %>% filter(year == assyear),
+             colour = "red") +
+  scale_y_continuous(limits = c(-0.15, 0.15))
+p.02
+```
+
+## multiple comparisons
+
+```{r inputs}
+rbx <- fishvice::mup_rbx("/u2/reikn/Tac/2022/01-cod/ass/mup/smx", scale = 1000)
+fil <- "/u2/reikn/Tac/2022/01-cod/data-raw/Supplementary S3.xlsx"
+shits <- readxl::excel_sheets(fil)
+mc.smb <- 
+  readxl::read_excel(fil, sheet = shits[1]) %>% 
+  mutate(sur = "smb")
+mc.smh <- 
+  readxl::read_excel(fil,
+                     sheet = shits[2]) %>% 
+  mutate(sur = "smh")
+mc <- 
+  bind_rows(mc.smb, mc.smh) %>% 
+  spread(sur, Mc) %>% 
+  mutate(mc = ifelse(is.na(smh), smb, (smb + smh) / 2))
+mc <- 
+  expand_grid(year = 1985:2022,
+              age = 1:14) %>% 
+  left_join(mc %>% select(year, age, mc)) %>% 
+  mutate(mc = ifelse(year < 1994, 0.2, mc)) %>% 
+  arrange(year, age) %>% 
+  group_by(year) %>% 
+  fill(mc, .direction = "downup") %>% 
+  group_by(age) %>% 
+  fill(mc) %>% 
+  ungroup()
+```
+
+```{r xsasetup}
+rbx$rby <- rbx$rby %>% filter(year %in% 1985:2022)
+rbx$rbya <- rbx$rbya %>% filter(year %in% 1985:2022)
+# set maturity and stock weights such that SSB is actually B4+
+rbx$rbya <-
+  rbx$rbya %>% 
+  mutate(mat = replace_na(mat, 0),
+         mat = ifelse(age >= 4, 1, 0),
+         ssbW = cW,
+         ssbW = replace_na(ssbW, 0))
+rbx.mc <- rbx
+rbx.mc$rbya <-
+  rbx.mc$rbya %>% 
+  select(-m) %>% 
+  left_join(mc %>% rename(m = mc))
+# pf and pm set to 0, so "SSB" = B4+ is based on stock in numbers in start of year
+fls <- rbx %>% rbx_to_flstock(pf = 0, pm = 0, fage = c(5, 10))
+fls.mc <- rbx.mc %>% rbx_to_flstock(pf = 0, pm = 0, fage = c(5, 10))
+ind.smb <- rbx_to_flindex(rbx, "U1") %>% trim(year = years)
+ind.smh <- rbx_to_flindex(rbx, "U2", time = c(10/12, 10.5/12)) %>% trim(year = 1996:2021)
+# only spring survey used in paper
+ind <- FLIndices(ind.smb)
+```
+
+```{r xsaruns}
+# power up to age 5, q estimated for all age groups!
+cntr <- FLXSA.control(maxit = 70, rage = 5, qage = 14)
+xsa   <- FLXSA(fls, ind, cntr)
+xsa.mc <- FLXSA(fls.mc, ind, cntr)
+retro <- tapply(retro.years, 1:length(retro.years), function(x){
+  window(fls,end=x)+FLXSA(window(fls, end = x), ind, cntr)
+})
+names(retro) <- retro.years
+retro.mc <- tapply(retro.years, 1:length(retro.years), function(x){
+  window(fls.mc,end=x)+FLXSA(window(fls.mc, end = x), ind, cntr)
+})
+names(retro.mc) <- retro.years
+```
+
+```{r result}
+lh.retro <- function(ret) {
+  bio <- 
+    map(ret, computeStock) %>% 
+    map(as.data.frame) %>% 
+    map(as_tibble) %>% 
+    bind_rows(.id = "assyear") %>% 
+    mutate(assyear = as.integer(assyear)) %>% 
+    ungroup()
+  bio.last <- 
+    bio %>% 
+    filter(assyear == max(assyear)) %>% 
+    select(year, bio = data)
+  bio %>% 
+    left_join(bio.last) %>% 
+    mutate(r = log(data / bio))
+}
+ret.base <- lh.retro(fls.retro) %>% mutate(run = "0.2")
+ret.mc <- lh.retro(fls.mc.retro) %>% mutate(run = "mc")
+```
+
+```{r, fig.height = 10}
+res <- bind_rows(ret.base, ret.mc)
+last.point <- 
+  res %>% 
+  filter(year == assyear)
+p1 <- 
+  res %>% 
+  ggplot(aes(year, data, group = assyear)) +
+  geom_line() +
+  geom_point(data = last.point, colour = "red") +
+  facet_wrap(~ run)
+p2 <- 
+  res %>% 
+  ggplot(aes(year, r, group = assyear)) +
+  geom_line() +
+  geom_point(data = last.point,
+             colour = "red") +
+  facet_wrap(~ run)
+p1 + p2 + plot_layout(ncol = 1)
+```
+
+```{r}
+last.point %>% 
+  group_by(run) %>% 
+  summarise(mean = mean(r),
+            sd = sd(r))
+```
+
+```{r sanitycheck}
+m(fls.mc) %>% trim(year = 1993:2021, age = 1:10) %>% round(2)
 ```
 

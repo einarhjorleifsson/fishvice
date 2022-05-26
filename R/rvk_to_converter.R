@@ -98,6 +98,15 @@ rbx_to_flindex <- function(rbx, sur = "U1", time = c(3/12, 3.5/12)) {
     # NOTE: need to check this convention
     dplyr::mutate(o = exp(o)) %>%
     tidyr::drop_na()
+
+  # Skitamix
+  if(sur == "U2") {
+    d <- tibble(age = 3:14) %>% mutate(year = 2011, o = NA)
+    opr <-
+      bind_rows(opr, d) %>%
+      arrange(year, age)
+  }
+
   ages  <- opr %>% dplyr::pull(age)  %>% unique() %>% sort()
   years <- opr %>% dplyr::pull(year) %>% unique() %>% sort()
 
