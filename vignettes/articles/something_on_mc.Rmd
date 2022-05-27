@@ -68,29 +68,36 @@ rbx.mc$rbya <-
 ### flr setup
 
 ```{r xsasetup}
-# pf and pm set to 0, so "SSB" = B4+ is based on stock in numbers in start of year
-# issue: age 14 should not be a plus group, for relative comparisons should though be ok
+# pf and pm set to 0, so "SSB" = B4+ is based on stock in numbers in start of
+#  year
+# issue: age 14 should not be a plus group, for relative comparisons
+#  should though be ok
 fls <-    rbx %>%    rbx_to_flstock(pf = 0, pm = 0, fage = c(5, 10))
 fls.mc <- rbx.mc %>% rbx_to_flstock(pf = 0, pm = 0, fage = c(5, 10))
 ind.smb <- rbx_to_flindex(rbx, "U1") %>% trim(year = 1985:2021)
-# ind.smh <- rbx_to_flindex(rbx, "U2", time = c(10/12, 10.5/12)) %>% trim(year = 1996:2021)
+# ind.smh <- 
+#  rbx_to_flindex(rbx, "U2", time = c(10/12, 10.5/12)) %>% 
+#  trim(year = 1996:2021)
 # only spring survey used in paper
 ind <- FLIndices(ind.smb)
 ```
 
-### xsa runs
+### xsa retrospectives
 
 ```{r xsaruns}
 # power or no power, that is the question
 cntrp0 <- FLXSA.control(maxit = 70, rage = 0, qage = 14)
 cntrp5 <- FLXSA.control(maxit = 70, rage = 5, qage = 14)
-
-# a little helper
-lh_retro <- function(fls, ind, cntr, ryears = 1998:2021) {
-  
-  retro <-    tapply(ryears, 1:length(ryears), function(x) {
-    window(fls, end = x)    + FLXSA(window(fls, end = x),    ind, cntr)
-  })
+# a helper retro functions
+lh_retro <- function(end.year, fls, ind, cnt) {
+  window(fls, end = end.year) + 
+    FLXSA(window(fls, end = end.year), 
+          window(ind, end = end.year), 
+          cnt)
+}
+# a helper compilation function (here only biomass, B4+)
+lh_retro_B4p <- function(ryears, fls, ind, cnt) {
+  retro <- map(ryears, lh_retro, fls, ind, cnt)
   names(retro) <- ryears
   bio <- 
     map(retro, computeStock) %>% 
@@ -107,12 +114,15 @@ lh_retro <- function(fls, ind, cntr, ryears = 1998:2021) {
     bio %>% 
     left_join(bio.last) %>% 
     mutate(r = log(data / bio))
-  return(list(bio = bio, retro = retro, cntr = cntr, ind = ind))
+  # just so no need to alter code below
+  return(list(bio = bio))
 }
-retp0 <-    lh_retro(fls,    ind, cntrp0)
-retp0.mc <- lh_retro(fls.mc, ind, cntrp0)
-retp5 <-    lh_retro(fls,    ind, cntrp5)
-retp5.mc <- lh_retro(fls.mc, ind, cntrp5)
+
+ryears <- 1998:2021
+retp0 <-    lh_retro_B4p(ryears, fls,    ind, cntrp0)
+retp0.mc <- lh_retro_B4p(ryears, fls.mc, ind, cntrp0)
+retp5 <-    lh_retro_B4p(ryears, fls,    ind, cntrp5)
+retp5.mc <- lh_retro_B4p(ryears, fls.mc, ind, cntrp5)
 ```
 
 ### results
@@ -167,9 +177,26 @@ last.point %>%
                digits = 3)
 ```
 
+### conclusions
+
+* The variable M (p0mc) show better retrospective performance than constant M (p002) if no power is assumed.
+* Both variable and constant M show improved retrospectives if a power up to and including age 5 is assumed.
+* When power is assumed, the retrospective performance of constant M (p502) outperformes the variable M hypothesis (p5mc).
+
 ### sanity check - the mc input
 
 ```{r sanitycheck}
 m(fls.mc) %>% trim(year = 1993:2021, age = 1:10) %>% round(2)
 ```
 
+### change log
+
+```
+2022-05-27 
+  * converted lh_function, now used purrr::map rather than lapply
+  * added window to the index as well, just for clarity
+  * neither affects the results nor the conclusion
+  * added conclusions and some minor additional text edits
+2022-05-26 
+  * first version - bb & co notified via email
+```
