@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
 ```{r}
 library(FLCore)
 library(FLXSA)
+library(FLasher)
 library(ggplotFL)
 library(patchwork)
 library(tidyverse)
@@ -22,82 +23,37 @@ library(tidyverse)
 library(fishvice)
 ```
 
-### get data
+#### little helper functions
 
-```{r inputs}
-fil <- "/u2/reikn/Tac/2022/01-cod/data-raw/Supplementary S3.xlsx"
-shits <- readxl::excel_sheets(fil)
-mc <- 
-  expand_grid(year = 1985:2022,
-              age = 1:14) %>% 
-  left_join(bind_rows(readxl::read_excel(fil, sheet = shits[1]) %>% mutate(sur = "smb"),
-                      readxl::read_excel(fil, sheet = shits[2]) %>% mutate(sur = "smh"))) %>% 
-  spread(sur, Mc) %>% 
-  mutate(mc = case_when(year < 1994 ~ 0.2,
-                        is.na(smh) ~ smb,
-                        TRUE ~ (smb + smh) / 2)) %>% 
-  select(year, age, mc) %>% 
-  arrange(year, age) %>%
-  group_by(year) %>% 
-  # assume same mc in all year after last datayear
-  fill(mc, .direction = "downup") %>% 
-  # 10+ same as 9
-  group_by(age) %>% 
-  fill(mc) %>% 
-  ungroup()
-rbx <- fishvice::mup_rbx("/u2/reikn/Tac/2022/01-cod/ass/mup/smx", scale = 1000)
-# have not figured out how to set xsa up with survey data in year with no catch data
-#  besides of course the old-way, but can not be bothered with that now
-rbx$rby <-  rbx$rby %>%  filter(year %in% 1985:2021)
-rbx$rbya <- rbx$rbya %>% filter(year %in% 1985:2021)
-# set maturity and stock weights such that SSB is actually B4+
-rbx$rbya <-
-  rbx$rbya %>% 
-  mutate(mat = replace_na(mat, 0),
-         mat = ifelse(age >= 4, 1, 0),
-         ssbW = cW,
-         ssbW = replace_na(ssbW, 0))
-rbx.mc <- rbx
-# replace 0.2 with mc
-rbx.mc$rbya <-
-  rbx.mc$rbya %>% 
-  select(-m) %>% 
-  left_join(mc %>% rename(m = mc))
-```
-
-### flr setup
-
-```{r xsasetup}
-# pf and pm set to 0, so "SSB" = B4+ is based on stock in numbers in start of
-#  year
-# issue: age 14 should not be a plus group, for relative comparisons
-#  should though be ok
-fls <-    rbx %>%    rbx_to_flstock(pf = 0, pm = 0, fage = c(5, 10))
-fls.mc <- rbx.mc %>% rbx_to_flstock(pf = 0, pm = 0, fage = c(5, 10))
-ind.smb <- rbx_to_flindex(rbx, "U1") %>% trim(year = 1985:2021)
-# ind.smh <- 
-#  rbx_to_flindex(rbx, "U2", time = c(10/12, 10.5/12)) %>% 
-#  trim(year = 1996:2021)
-# only spring survey used in paper
-ind <- FLIndices(ind.smb)
-```
-
-### xsa retrospectives
-
-```{r xsaruns}
-# power or no power, that is the question
-cntrp0 <- FLXSA.control(maxit = 70, rage = 0, qage = 14)
-cntrp5 <- FLXSA.control(maxit = 70, rage = 5, qage = 14)
-# a helper retro functions
+```{r}
+# a retro functions
 lh_retro <- function(end.year, fls, ind, cnt) {
   window(fls, end = end.year) + 
     FLXSA(window(fls, end = end.year), 
           window(ind, end = end.year), 
           cnt)
 }
-# a helper compilation function (here only biomass, B4+)
+# get the reference biomass next year
+lh_1year_projection <- function(fls) {
+  # the mean recruitment model
+  sr <- as.FLSR(fls, model="geomean")
+  params(sr)['a',] <- exp(mean(log(rec(fls))))
+  # use same weights and Fay (gets muliplied by Flevel) as in the terminal year
+  proj <- stf(fls, nyears = 1, wts.nyears = 1)
+  last.year <- range(fls)["maxyear"][[1]]
+  fsq <- mean(fbar(fls)[,as.character(last.year)])
+  ctrl <- 
+    fwdControl(data.frame(year = last.year + 1, 
+                          quant = "f", 
+                          value = fsq))
+  fwd(proj, control = ctrl, sr = sr)
+}
+# a compilation function (here only biomass, B4+)
 lh_retro_B4p <- function(ryears, fls, ind, cnt) {
   retro <- map(ryears, lh_retro, fls, ind, cnt)
+  # add one year projection to get the biomass in the ass year
+  #  note the smb index in the ass year is NOT used in the fitting, need to check
+  if(projections) retro <- map(retro, lh_1year_projection)
   names(retro) <- ryears
   bio <- 
     map(retro, computeStock) %>% 
@@ -117,8 +73,124 @@ lh_retro_B4p <- function(ryears, fls, ind, cnt) {
   # just so no need to alter code below
   return(list(bio = bio))
 }
+# the plot
+lh_ggplot <- function(res, last.point, bio.spaly) {
+  p1 <- 
+    res %>% 
+    ggplot() +
+    geom_line(data = bio.spaly,
+              aes(year, bio),
+              colour = "yellow",
+              lwd = 1) +
+    geom_line(aes(year, data, group = assyear)) +
+    geom_point(data = last.point, colour = "red",
+               aes(year, data)) +
+    facet_wrap(~ run) +
+    labs(x = NULL, y = "B4+")
+  p2 <- 
+    res %>% 
+    ggplot(aes(year, r, group = assyear)) +
+    geom_line() +
+    geom_point(data = last.point,
+               colour = "red") +
+    facet_wrap(~ run) +
+    labs(x = NULL, y = "contemporaneous\n vs current")
+  return(p1 + p2 + plot_layout(ncol = 1))
+}
+# doing retro statistic using the last ~5 years of the assessment 
+#  is plain stupid, even though ices does so
+lh_retro_performance <- function(d) {
+  left_join(d %>% 
+              group_by(run) %>%  summarise(bias98.21 = mean(r), cv98.21 = sd(r)),
+            d %>% filter(year %in% 1998:2017) %>% 
+              group_by(run) %>%  summarise(bias98.17 = mean(r), cv98.17 = sd(r)))
+}
+```
 
-ryears <- 1998:2021
+
+### get data
+
+```{r inputs}
+YRS <- 1985:2021   # it is only fair to use 1994 onwards, the time the
+                   #  estimates start, but here just trying to repeat the paper
+fil <- "/u2/reikn/Tac/2022/01-cod/data-raw/Supplementary S3.xlsx"
+shits <- readxl::excel_sheets(fil)
+mc <- 
+  expand_grid(year = YRS,
+              age = 1:14) %>% 
+  left_join(bind_rows(readxl::read_excel(fil, sheet = shits[1]) %>% mutate(sur = "smb"),
+                      readxl::read_excel(fil, sheet = shits[2]) %>% mutate(sur = "smh"))) %>% 
+  spread(sur, Mc) %>% 
+  mutate(mc = case_when(year < 1994 ~ 0.2,
+                        is.na(smh) ~ smb,
+                        TRUE ~ (smb + smh) / 2)) %>% 
+  select(year, age, mc) %>% 
+  arrange(year, age) %>%
+  group_by(year) %>% 
+  # assume same mc in all year after last datayear
+  fill(mc, .direction = "downup") %>% 
+  # 10+ same as 9
+  group_by(age) %>% 
+  fill(mc) %>% 
+  ungroup() %>% 
+  filter(year %in% YRS)
+rbx <- fishvice::mup_rbx("/u2/reikn/Tac/2022/01-cod/ass/mup/smx", scale = 1000)
+bio.spaly <- rbx$rby %>% filter(year %in% min(YRS):2022) %>% select(year, bio)
+# have not figured out how to set xsa up with survey data in year with no catch data
+#  besides of course the old-way, but can not be bothered with that now
+rbx$rby <-  rbx$rby %>%  filter(year %in% YRS)
+rbx$rbya <- rbx$rbya %>% filter(year %in% YRS)
+# set maturity and stock weights such that SSB is actually B4+
+rbx$rbya <-
+  rbx$rbya %>% 
+  mutate(mat = replace_na(mat, 0),
+         mat = ifelse(age >= 4, 1, 0),
+         ssbW = sW,                    # 2022-05-28 from cW to sW as in paper
+         ssbW = replace_na(ssbW, 0))
+rbx.mc <- rbx
+# replace 0.2 with mc
+rbx.mc$rbya <-
+  rbx.mc$rbya %>% 
+  select(-m) %>% 
+  left_join(mc %>% rename(m = mc))
+```
+
+### flr setup
+
+```{r xsasetup}
+# pf and pm set to 0, so "SSB" = B4+ is based on stock in numbers in start of
+#  year
+# issue: age 14 should not be a plus group, for relative comparisons
+#  should though be ok
+fls <-    rbx %>%    rbx_to_flstock(pf = 0, pm = 0, fage = c(5, 10))
+# range(fls)["plusgroup"] <- NA
+fls.mc <- rbx.mc %>% rbx_to_flstock(pf = 0, pm = 0, fage = c(5, 10))
+# range(fls.mc)["plusgroup"] <- NA
+ind.smb <- 
+  rbx_to_flindex(rbx, "U1", time = c(3/12, 3.5/12)) %>% trim(year = YRS)
+# range(ind.smb)["plusgroup"] <- NA
+# ind.smh <- 
+#  rbx_to_flindex(rbx, "U2", time = c(10/12, 10.5/12)) %>% 
+#  trim(year = 1996:2021)
+# only spring survey used in paper
+ind <- FLIndices(ind.smb)
+```
+
+### xsa retrospectives
+
+#### controls
+
+```{r xsaruns}
+# power or no power, that is the question
+cntrp0 <- FLXSA.control(maxit = 70, rage = 0, qage = 14)  # i would set qage to
+cntrp5 <- FLXSA.control(maxit = 70, rage = 5, qage = 14)  #   age 9 or 10
+```
+
+#### run retro
+
+```{r}
+projections <- FALSE
+ryears <- 1998:max(YRS)
 retp0 <-    lh_retro_B4p(ryears, fls,    ind, cntrp0)
 retp0.mc <- lh_retro_B4p(ryears, fls.mc, ind, cntrp0)
 retp5 <-    lh_retro_B4p(ryears, fls,    ind, cntrp5)
@@ -126,32 +198,6 @@ retp5.mc <- lh_retro_B4p(ryears, fls.mc, ind, cntrp5)
 ```
 
 ### results
-
-
-```{r}
-res <- bind_rows(retp0$bio    %>% mutate(run = "p002"),
-                 retp0.mc$bio %>% mutate(run = "p0mc"),
-                 retp5$bio    %>% mutate(run = "p502"),
-                 retp5.mc$bio %>% mutate(run = "p5mc"))
-last.point <- 
-  res %>% 
-  filter(year == assyear)
-p1 <- 
-  res %>% 
-  ggplot(aes(year, data, group = assyear)) +
-  geom_line() +
-  geom_point(data = last.point, colour = "red") +
-  facet_wrap(~ run) +
-  labs(x = NULL, y = "B4+")
-p2 <- 
-  res %>% 
-  ggplot(aes(year, r, group = assyear)) +
-  geom_line() +
-  geom_point(data = last.point,
-             colour = "red") +
-  facet_wrap(~ run) +
-  labs(x = NULL, y = "contemporaneous\n vs current")
-```
 
 clarification on runs:
 ```
@@ -162,26 +208,36 @@ p502     Power ages 1:5, M = 0.20
 p5mc     Power ages 1:5, M = mc
 ```
 
+```{r}
+res <- bind_rows(retp0$bio    %>% mutate(run = "p002"),
+                 retp0.mc$bio %>% mutate(run = "p0mc"),
+                 retp5$bio    %>% mutate(run = "p502"),
+                 retp5.mc$bio %>% mutate(run = "p5mc"))
+last.point <- 
+  res %>% 
+  filter(year == assyear + projections)
+```
+
 ```{r, fig.height = 8, fig.cap = "Retrospective performance of 4 different model setups. See table above for further details on settings."}
-p1 + p2 + plot_layout(ncol = 1)
+lh_ggplot(res, last.point, bio.spaly)
 ```
 
 #### perfomance measure
 
 ```{r}
 last.point %>% 
-  group_by(run) %>% 
-  summarise(bias = mean(r),
-            cv = sd(r)) %>% 
+  lh_retro_performance() %>% 
   knitr::kable(caption = "Retrospective performance measure of 4 different model setups. See table above for further details on settings.",
                digits = 3)
 ```
 
-### conclusions
+### conclusions on the retrospectives
 
 * The variable M (p0mc) show better retrospective performance than constant M (p002) if no power is assumed.
 * Both variable and constant M show improved retrospectives if a power up to and including age 5 is assumed.
-* When power is assumed, the retrospective performance of constant M (p502) outperformes the variable M hypothesis (p5mc).
+* When power is assumed, the retrospective performance of constant M (p502) outperformes the variable M (p5mc).
+
+There may though be more under the hood in the variable M diagnostics that may warrant further investigation. Something beyond that done in the Mc article.
 
 ### sanity check - the mc input
 
@@ -189,10 +245,54 @@ last.point %>%
 m(fls.mc) %>% trim(year = 1993:2021, age = 1:10) %>% round(2)
 ```
 
+### results of retro xsa with 1 year projections
+
+... still not using the survey in the assessment year
+
+```{r, echo = FALSE, fig.height = 8, fig.cap = "Retrospective performance of 4 different model setups. See table above for further details on settings."}
+
+projections <- TRUE
+ryears <- 1998:max(YRS)
+retp0 <-    lh_retro_B4p(ryears, fls,    ind, cntrp0)
+retp0.mc <- lh_retro_B4p(ryears, fls.mc, ind, cntrp0)
+retp5 <-    lh_retro_B4p(ryears, fls,    ind, cntrp5)
+retp5.mc <- lh_retro_B4p(ryears, fls.mc, ind, cntrp5)
+res <- bind_rows(retp0$bio    %>% mutate(run = "p002"),
+                 retp0.mc$bio %>% mutate(run = "p0mc"),
+                 retp5$bio    %>% mutate(run = "p502"),
+                 retp5.mc$bio %>% mutate(run = "p5mc"))
+last.point <- 
+  res %>% 
+  filter(year == assyear + projections)
+lh_ggplot(res, last.point, bio.spaly)
+last.point %>% 
+  lh_retro_performance() %>% 
+  knitr::kable(caption = "Retrospective performance measure of 4 different model setups. See table above for further details on settings.",
+               digits = 3)
+```
+
+
 ### change log
 
 ```
-2022-05-27 
+2022-05-28:
+* changed basis of reference biomass from cW to sW, reflecting what i think was 
+   done in the paper. B4+ is actually based on catch weights. That basis
+   is of course wrong, but it is linked to the 0.20 multiplier in the HCR that
+   also includes a stabilizer.
+   Whatever the case, for some reasons XSA gives a much higher biomass when
+   using catch weights than muppet, or for that matter sam. Most likely related
+   to mishandling of the plusgroup. But these details are not an issue in this 
+   doodle.
+* added one year prediction, i.e. into the advise year, to reflect what was
+   actually done in the paper. note though that not using the survey index in 
+   the advice year is still an issue (can not be done in XSA, i think).
+* also simplified code, but that alone does not affecting previous versions 
+   of this document
+* added different periods for estimating retrospective performance. not yet 
+   though repeating the 2 five year peels in the paper because that is not 
+   kosher.
+2022-05-27
   * converted lh_function, now used purrr::map rather than lapply
   * added window to the index as well, just for clarity
   * neither affects the results nor the conclusion
