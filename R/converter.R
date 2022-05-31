@@ -46,7 +46,7 @@ flstock_to_rbya <- function(x, scale=1, project = TRUE, plusgroup = TRUE)
     y <- rbind(y, y2)
   }
 
-  return(tibble::as_data_frame(y))
+  return(tibble::as_tibble(y))
 
 }
 
@@ -73,7 +73,7 @@ flindices_to_rbya <- function(x) {
                     sur = indices[i])
   }
 
-  x <- x2 %>% purrr::map_df(tibble::as_data_frame)
+  x <- x2 %>% purrr::map_df(tibble::as_tibble)
 
 
   return(x)

@@ -184,7 +184,8 @@ mup_rby <- function(path, scale = 1, fleets, assyear, run) {
 
   rby <- readr::read_tsv(file.path(path, "resultsbyyear"),
                          na = c("-1", "0"),
-                         show_col_types = FALSE)
+                         show_col_types = FALSE) %>%
+    janitor::remove_empty(which = "cols")
   # check length of fleets vs nfleets
   if(!missing(fleets)) {
     nfleets <- (ncol(rby) - 14) / 2
