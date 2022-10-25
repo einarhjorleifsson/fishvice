@@ -50,8 +50,11 @@ sam_ibya <- function(fit, scale = 1, long = TRUE, run) {
     stop('Object has to be of class "sam"')
 
   lh <- function(x, cn) {
+    x <-
+      x %>%
+      as.data.frame()
+    names(x) <- str_replace(names(x), ".Residual catch", "")
     x %>%
-      as.data.frame() %>%
       dplyr::mutate(year = row.names(.) %>% as.integer()) %>%
       tidyr::gather(age, {{cn}}, -year, convert = TRUE) %>%
       tibble::as_tibble()
