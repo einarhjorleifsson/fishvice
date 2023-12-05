@@ -474,6 +474,43 @@ mup_rbx <- function(path, scale = 1, fleets, assyear, run, wide = TRUE) {
 
 }
 
+mup_covar <- function(sigma,rho){
+  rho <- rho[1]
+  n <- length(sigma)
+  x <- diag(sigma^2)
+  for(i in 1:n){
+    for(j in 1:i){
+      x[i,j] <- sigma[i]*sigma[j]*rho^(i-j)
+    }
+  }
+  x <- x + t(x) - diag(sigma^2)
+  chol(solve(x))
+}
+
+mup_scaled_residuals <- function(rbya,
+                          rba,
+                          cn=c("rU1","cvU1"),
+                          years=1985:2020,
+                          ages=1:13,
+                          corrcoeff){
+  dat <- rba[rba$age %in% ages,] %>% as.data.frame() # Not sure how to do this with filter.
+  dat1 <- rbya[rbya$age %in% ages & rbya$year %in% years,] %>% as.data.frame()
+  xx <- mup_covar(dat[,cn[2]],corrcoeff)
+  x <- tapply(dat1[,cn[1]],list(dat1$year,dat1$age),sum)
+  newcn <- paste("sc", cn[1],sep="")
+  x1 <-  x %*% t(xx)
+  dat1[,newcn] <- c(t(x1))
+
+  return(dat1)
+
+}
+
+
+# d <- mup_scaled_residuals(dat$rbya,dat$rba,years=1985:2022,ages=2:10,corrcoeff=0.576)
+# residplot(d, cn=c("year","age","scrU1"),maxn=2,poscol="red",negcol="blue",maxsize=0.1)
+
+
+
 
 # HOSKI ------------------------------------------------------------------------
 # Hér sérðu dæmi um nýja read_separ (read_separ1) í bili

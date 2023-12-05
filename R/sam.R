@@ -170,6 +170,28 @@ sam_rbya <- function(fit, data = TRUE, scale = 1, long = TRUE, run) {
 #' @export
 #'
 sam_rby <- function(fit, scale = 1, run) {
+  if(class(fit) == "samset") {
+    base <- attributes(fit)$fit |> fv_sam_rby(scale = scale, run = run)
+    max.year <- max(base$year)
+    base$assyear <- max.year
+    res <- purrr::map(fit, sam_rby, scale = scale, run = run)
+    names(res) <- max.year - 1:length(res)
+    ret <-
+      dplyr::bind_rows(base,
+                       res |>
+                         dplyr::bind_rows(.id = "assyear") |>
+                         dplyr::mutate(assyear = as.numeric(assyear)))
+  }
+  if(class(fit) == "sam") {
+    ret <-
+      fit |>
+      fv_sam_rby(scale = scale, run = run)
+  }
+  return(ret)
+}
+
+
+fv_sam_rby <- function(fit, scale = 1, run) {
 
   lh <- function(x, variable, scale = 1) {
     x %>%
