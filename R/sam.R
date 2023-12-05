@@ -53,7 +53,7 @@ sam_ibya <- function(fit, scale = 1, long = TRUE, run) {
     x <-
       x %>%
       as.data.frame()
-    names(x) <- str_replace(names(x), ".Residual catch", "")
+    names(x) <- stringr::str_replace(names(x), ".Residual catch", "")
     x %>%
       dplyr::mutate(year = row.names(.) %>% as.integer()) %>%
       tidyr::gather(age, {{cn}}, -year, convert = TRUE) %>%

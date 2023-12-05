@@ -1,8 +1,8 @@
 Package: fishvice
 Type: Package
 Title: A collection of various personal functions used in my work on fish stock assessment
-Version: 2022-05-26
-Date: 2022-05-26
+Version: 2023-12-05
+Date: 2023-12-05
 Authors@R: person("Einar", "Hjorleifsson", email = "einarhjorleifsson@gmail.com",
   role = c("aut", "cre"))
 Description: The aim of this package is to provide simple uniform tibbles from various classes that are outputs from different fish stock assessment packages (such as stockassessment, FLRs, muppet and then some) for us mere mortals that do live in the tidyverse realm. This may aid in further scrutinization of inputs and results beyond that provided by the convenience standard output functions (tables and plots) provided by these packages.
@@ -34,4 +34,4 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
